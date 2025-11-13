@@ -1,0 +1,3 @@
+Style Guide for writing code
+
+https://www.kernel.org/doc/html/v4.10/process/coding-style.html
