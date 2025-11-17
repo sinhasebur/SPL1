@@ -1,0 +1,26 @@
+
+1/
+
+https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_55.html
+
+gdb syntax
+-g when compiling
+gdb ./program
+run
+
+
+break
+to select breakpoint , next to go to next c line
+
+x/nfu addr
+x is to examine
+/
+n is the repeat count
+f is the format x is hexa used in my case
+u is the unit size, b for bytes
+
+gdb.png
+
+
+2/
+
