@@ -8,7 +8,8 @@ int main(){
     for(int i=0;i<16;i++){
         if(x[i]=='0') x[i]='1';
         else if(x[i]=='1') x[i]='0';
-        else
+        else{}
+        
         cout<<"{"<<x<<"}"<<endl; 
        
     }
