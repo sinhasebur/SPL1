@@ -1,6 +1,5 @@
 #include<stdio.h>
 #include<string.h>
-#include <stdlib.h>
 
 
 #define endl printf("\n");
@@ -314,15 +313,6 @@ void sbox(int* x, int* z)
 
         int row=(b[0]<<1) | (b[5]);
         int col= ((b[1])<<3) | ((b[2])<<2) | ((b[3])<<1) | b[4];
-
-        if (row < 0 || row > 3 || col < 0 || col > 15) {
-            fprintf(stderr,
-                    "SBOX index out of range: i=%d row=%d col=%d "
-                    "(b=%d%d%d%d%d%d)\n",
-                    i, row, col,
-                    b[0], b[1], b[2], b[3], b[4], b[5]);
-            exit(1);
-        }
 
         a[i]=s[i][row][col];
     }
