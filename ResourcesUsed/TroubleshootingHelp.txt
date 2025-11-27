@@ -23,4 +23,15 @@ gdb.png
 
 
 2/
+https://www.geeksforgeeks.org/cpp/segmentation-fault-c-cpp/
 
+The segmentation fault in C++ may occur in the case where the program tries to:
+
+Access the memory that it does not own.
+Dereference nullptr or NULL pointer.
+Modify Read-Only memory.
+It is an error indicating memory corruption.
+
+
+3/
+https://medium.com/@sams.iitdu/how-to-build-header-file-in-c-programming-4aa2b6973982

@@ -9,7 +9,6 @@ void lcs(int *x); // left circular shift
 int main()
 {
     int key[64] = {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1};
-
     int permuted1key[56];
     permutedChoice1(key, permuted1key);
 
@@ -17,28 +16,15 @@ int main()
 
     for (int i = 1; i <= 16; i++){
         if (i == 1 || i == 4 || i == 9 || i == 16){
-            // printf("before:");
-            // for(int i=0;i<56;i++) printf("%d ",permuted1key[i]);
-            // printf("\n");
+
             lcs(permuted1key);
 
-            // printf("after:");
-            // for(int i=0;i<56;i++) printf("%d ",permuted1key[i]);
-
-            // printf("\n\n");
 
             lcs(permuted1key);
         }
         else{
 
-            //             printf("before:");
-            // for(int i=0;i<56;i++) printf("%d ",permuted1key[i]);
-            // printf("\n");
             lcs(permuted1key);
-
-            // printf("after:");
-            // for(int i=0;i<56;i++) printf("%d ",permuted1key[i]);
-            // printf("\n\n");
         }
         int temp[48];
         permutedChoice2(permuted1key, temp);
@@ -47,7 +33,6 @@ int main()
     }
 
     for (int i = 0; i < 16; i++){
-        // printf("\n\n");
         printf("Key Number %d:\n", i);
         for (int j = 0; j < 48; j++){
             printf("%d ", keys[i][j]);
