@@ -9,8 +9,8 @@ int binToInt(int x);
 void pbox(int* x);
 void int32bitstoChar(int* x, char* y);
 void xOr(char * x, char* y);
-void encrypt(char* x ,int* z);
-void decrypt(char* x, int* z);
+void encrypt(char* x ,int* y, char* z);
+void decrypt(char* x, int* y, char* z);
 void permutedChoice1(int *x, int *y);
 void permutedChoice2(int *x, int *y);
 void lcs(int *x);
@@ -18,7 +18,7 @@ void getKeys(int* x, int* y);
 
 
 
-void decrypt(char* x, int * z)
+void decrypt(char* x, int * z, char* y)
 {
 
     char l[4],r[4];
@@ -49,7 +49,7 @@ void decrypt(char* x, int * z)
     for(int i=0;i<4; i++) decipherText[4+i]=l[i];
 
     for(int i=0; i<8; i++) {
-        x[i]=decipherText[i];
+        y[i]=decipherText[i];
     }
 }
 
@@ -58,7 +58,7 @@ void decrypt(char* x, int * z)
 
 
 
-void encrypt(char* x, int * y)
+void encrypt(char* x, int * y, char* z)
 {
 
     char plainText[9];
@@ -95,7 +95,7 @@ void encrypt(char* x, int * y)
     for(int i=0;i<4; i++) cipherText[4+i]=r[i];
 
     for(int i=0; i<8; i++) {
-        x[i]=cipherText[i];
+        z[i]=cipherText[i];
     }
 
 }

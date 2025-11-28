@@ -1,49 +1,109 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "des.h"
 
 #define endl printf("\n");
-void ecb_encrypy_noPadding(char* text, int blockSize, int blockNum, int* key);
-void ecb_decrypy_noPadding(char* text, int blockSize, int blockNum, int* key);
+void ecb_encrypy_noPadding( int blockSize, int blockNum, int* key, char* filename);
+void ecb_decrypy_noPadding( int blockSize, int blockNum, int* key, char* filename);
 
 
-int main(){
-    char a[16]={'a','b','c','d','e','f','g','h','1','2','3','4','5','6','7','8'};
+int main()
+{
+
     int key[64] = {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1};
 
-    for(int i=0;i<16;i++) printf("%02X ",a[i]);
-    endl
+    ecb_encrypy_noPadding(64,2,key, "in.txt");
 
-    ecb_encrypy_noPadding(a,64,2,key);
+    ecb_decrypy_noPadding(64,2,key,"encrypted");
 
-    for(int i=0;i<16;i++) printf("%02X ",a[i]);
-    endl
-
-    ecb_decrypy_noPadding(a,64,2,key);
-
-    for(int i=0;i<16;i++) printf("%02X",a[i]);
-    endl
-
-    for(int i=0;i<16;i++) printf("%c",a[i]);
-
-    endl
 }
 
 
-void ecb_encrypy_noPadding(char* text, int blockSize, int blockNum, int* key){
+
+
+void ecb_encrypy_noPadding(int blockSize, int blockNum, int* key, char * filename)
+{
     int bytes=blockSize/8;
-    for(int i=0;i<blockNum;i++){
-        encrypt(text,key);
-        text=text+bytes;
+
+    FILE *text  = fopen(filename, "rb");
+    
+    if(!text){
+        printf("Input file %s not found", filename); endl
+        return;
     }
+    
+    char x;
+    int n=blockNum*bytes;
+    char* textstream= malloc(sizeof(char) * n);
+    
+    for(int i=0; i<n ; i++){
+        x=fgetc(text);
+        if(x==EOF) break;
+        else textstream[i]=x; 
+    }
+
+    char* cipherTextStream= malloc(sizeof(char) * n);
+    for(int i=0;i<blockNum;i++){
+        encrypt(textstream+ i*bytes,key,cipherTextStream + i*bytes);
+    }
+
+
+    FILE *cipher  = fopen("encrypted", "wb");
+
+    for(int i=0; i<n ; i++){
+        fputc(cipherTextStream[i],cipher);
+    }
+
+    fclose(text);
+    fclose(cipher);
+    free(textstream);
+    free(cipherTextStream);
+
 }
 
 
-void ecb_decrypy_noPadding(char* text, int blockSize, int blockNum, int* key){
+
+
+void ecb_decrypy_noPadding(int blockSize, int blockNum, int* key, char* file )
+{
     int bytes=blockSize/8;
+    FILE *text  = fopen(file, "rb");
+
+    char x;
+    int n=blockNum*bytes;
+    char* textstream= malloc(sizeof(char) * n);
+    
+    for(int i=0; i<n ; i++){
+        x=fgetc(text);
+        if(x==EOF)
+            break;
+        else
+            textstream[i]=x; 
+    }    
+    
+    char* out= malloc(sizeof(char) * n);
+
     for(int i=0;i<blockNum;i++){
-        decrypt(text,key);
-        text=text+bytes;
+        decrypt(textstream+ i*bytes,key,out+ i*bytes);
     }
+    
+    FILE *deciphered  = fopen("decrypted", "wb");
+
+    for(int i=0; i<n ; i++){
+        fputc(out[i],deciphered);
+    }
+
+    fclose(text);
+    fclose(deciphered);
+    free(textstream);
+    free(out);
+
 }
+
+
+
+
+
+
 
