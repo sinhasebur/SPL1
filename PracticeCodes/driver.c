@@ -9,18 +9,14 @@
 int main(){
     char a[8]={'a','b','c','d','a','b','c','d'};
     int key[64] = {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1};
-    //des(a,key);
+
     char ciphertext[8];
 
     encrypt(a,key);
 
-    printf("asl'kdjf;lkajsdl;kfjas;dlkjf;lkajsd;lkfhjasd");
-
-    for(int i=0;i<8;i++) printf("%02X ",a[i]);
     decrypt(a,key);
 
-    //for(int i=0;i<8;i++) printf("%02X",ciphertext[i]);
+    for(int i=0;i<8;i++) printf("%c",a[i]);
 
-    //decrypt(ciphertext,key);
-
+    endl
 }
