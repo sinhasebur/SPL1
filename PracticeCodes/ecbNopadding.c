@@ -4,6 +4,7 @@
 #include "des.h"
 
 #define endl printf("\n");
+
 void ecb_encrypy_noPadding( int blockSize, int blockNum, int* key, char* filename);
 void ecb_decrypy_noPadding( int blockSize, int blockNum, int* key, char* filename);
 
@@ -13,7 +14,7 @@ int main()
 
     int key[64] = {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1};
 
-    ecb_encrypy_noPadding(64,2,key, "in.txt");
+    ecb_encrypy_noPadding(64,2,key, "input");
 
     ecb_decrypy_noPadding(64,2,key,"encrypted");
 
