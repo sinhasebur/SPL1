@@ -2,4 +2,7 @@
 a.out
 in.txt
 out.txt
-
+input*
+encrypted*
+decrypted*
+*.out
