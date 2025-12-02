@@ -10,8 +10,9 @@
 void ecb_encrypy_Padding( int blockSize, int* key, char* filename);
 void ecb_decrypy_Padding( int blockSize, int* key, char* filename);
 
-// int pkcs7_Pad(int blockSize,char* filename );
-// void pkcs7_remove_Pad(int blockSize,int excess,char* filename );
+int pkcs7_Pad(int blockSize,FILE* filename, char ** textstream );
+
+void pkcs7_remove_Pad(int blockSize,FILE* decrypted,char** outstream , int filesize);
 
 
 int main()
@@ -26,6 +27,54 @@ int main()
 
 
 
+int pkcs7_Pad(int blockSize,FILE* text , char** textstream)
+{
+    int bytes=blockSize/8;
+    
+    long long n=0;
+    char x;
+    int i;
+
+    while((i=fgetc(text))!=EOF){
+        n++;
+    }
+    n--;
+    fseek(text, 0, SEEK_SET);    
+    
+    long long blockNum= n/bytes;
+    long long allocate= ((blockNum+1)*bytes);
+    int excess=n%bytes;
+
+    (*textstream)= malloc(allocate);
+
+    for(int i=0; i<n - excess; i++){
+        x=fgetc(text);
+        if(x==EOF) break;
+        else (*textstream)[i]=x; 
+       // printf("%c",x);
+    }
+   // endl
+
+    int k=excess;
+
+    //printf("%d",k); endl
+    for(int i=0;i<bytes;i++){
+        
+        if(i<k){
+            x=fgetc(text);
+            (*textstream)[blockNum*bytes+i]=x;
+           // printf("%c",x); 
+        }
+        else{
+            (*textstream)[blockNum*bytes+i]=bytes-excess;
+           // printf("a%d",bytes-excess);
+        }
+    }
+
+    blockNum++;
+    return blockNum;
+}
+
 
 void ecb_encrypy_Padding(int blockSize,  int* key, char * filename)
 {   
@@ -39,51 +88,12 @@ void ecb_encrypy_Padding(int blockSize,  int* key, char * filename)
         return;
     }
     
-    long long n=0;
-    char x;
-    int i;
-
-    while((i=fgetc(text))!=EOF){
-        n++;
-    }
-    n--;
-    fseek(text, 0, SEEK_SET);
-
+    char* textstream;
     
-    
-    long long blockNum= n/bytes;
-    long long allocate= ((blockNum+1)*bytes);
-    int excess=n%bytes;
-    // printf("%d",n); endl
-    // printf("%d",bytes); endl
+    long long blockNum= pkcs7_Pad( blockSize, text , &textstream);
 
-    char* textstream= malloc(allocate);
+    long long allocate= (blockNum*bytes);
 
-    for(int i=0; i<n - excess; i++){
-        x=fgetc(text);
-        if(x==EOF) break;
-        else textstream[i]=x; 
-       // printf("%c",x);
-    }
-   // endl
-
-    int k=excess;
-
-    //printf("%d",k); endl
-    for(int i=0;i<bytes;i++){
-        
-        if(i<k){
-            x=fgetc(text);
-            textstream[blockNum*bytes+i]=x;
-           // printf("%c",x); 
-        }
-        else{
-            textstream[blockNum*bytes+i]=bytes-excess;
-           // printf("a%d",bytes-excess);
-        }
-    }
-
-    blockNum++;
 
 
     char* cipherTextStream= malloc(sizeof(char) * allocate);
@@ -136,13 +146,14 @@ void ecb_decrypy_Padding(int blockSize, int* key, char* file )
     long long allocate= ((blockNum)*bytes);
    
 
-
     char* textstream= malloc(allocate);
     
     for(int i=0; i<n ; i++){
         x=fgetc(text);
-        if(x==EOF)
+        if(x==EOF){
+            printf("encrypted file reading error, Check encrpytion"); endl
             break;
+        }
         else
             textstream[i]=x; 
     }    
@@ -160,6 +171,8 @@ void ecb_decrypy_Padding(int blockSize, int* key, char* file )
     
     FILE *deciphered  = fopen("decrypted", "wb");
 
+    pkcs7_remove_Pad(blockSize, deciphered , &out, n-1);
+
     int padded= (int)out[n-1];
     //printf("",out[n-1]); endl
     
@@ -172,4 +185,13 @@ void ecb_decrypy_Padding(int blockSize, int* key, char* file )
     free(textstream);
     free(out);
 
+}
+
+void pkcs7_remove_Pad(int blockSize,FILE* decrypted,char** outstream , int size)
+{
+    int padded= (*outstream)[size];
+    
+    for(int i=0; i<size-padded; i++){
+        fputc((*outstream)[i],decrypted);
+    }  
 }
