@@ -4,7 +4,7 @@
 #include "des.h"
 
 #define endl printf("\n");
-
+#define char unsigned char
 void ecb_encrypy_Padding( int blockSize, int* key, char* filename);
 void ecb_decrypy_Padding( int blockSize, int* key, char* filename);
 
@@ -41,7 +41,7 @@ void ecb_encrypy_Padding(int blockSize,  int* key, char * filename)
     while((i=fgetc(text))!=EOF){
         n++;
     }
-
+    n--;
     fseek(text, 0, SEEK_SET);
 
     
@@ -49,25 +49,32 @@ void ecb_encrypy_Padding(int blockSize,  int* key, char * filename)
     long long blockNum= n/bytes;
     long long allocate= ((blockNum+1)*bytes);
     int excess=n%bytes;
-
+    // printf("%d",n); endl
+    // printf("%d",bytes); endl
 
     char* textstream= malloc(allocate);
 
-    for(int i=0; i<n - bytes; i++){
+    for(int i=0; i<n - excess; i++){
         x=fgetc(text);
         if(x==EOF) break;
         else textstream[i]=x; 
+       // printf("%c",x);
     }
+   // endl
 
+    int k=excess;
 
+    //printf("%d",k); endl
     for(int i=0;i<bytes;i++){
-        x=fgetc(text);
         
-        if(i<n){
-            textstream[blockNum+i]=x;
+        if(i<k){
+            x=fgetc(text);
+            textstream[blockNum*bytes+i]=x;
+           // printf("%c",x); 
         }
         else{
-            textstream[blockNum+i]=excess;
+            textstream[blockNum*bytes+i]=bytes-excess;
+           // printf("a%d",bytes-excess);
         }
     }
 
@@ -77,6 +84,7 @@ void ecb_encrypy_Padding(int blockSize,  int* key, char * filename)
     char* cipherTextStream= malloc(sizeof(char) * allocate);
     for(int i=0;i<blockNum;i++){
         encrypt(textstream+ i*bytes,key,cipherTextStream + i*bytes);
+        //for(int j=0;j<8;j++) printf("%c",textstream[i*bytes+j]);
     }
 
 
@@ -115,11 +123,12 @@ void ecb_decrypy_Padding(int blockSize, int* key, char* file )
     while((i=fgetc(text))!=EOF){
         n++;
     }
+    //printf("n%d",n); endl
     fseek(text, 0, SEEK_SET);
 
     
     long long blockNum= n/bytes;
-    long long allocate= ((blockNum+1)*bytes);
+    long long allocate= ((blockNum)*bytes);
    
 
 
@@ -135,15 +144,21 @@ void ecb_decrypy_Padding(int blockSize, int* key, char* file )
     
     char* out= malloc(sizeof(char) * n);
 
+    int k=0;
     for(int i=0;i<blockNum;i++){
         decrypt(textstream+ i*bytes,key,out+ i*bytes);
+        // for(int i=0;i<8;i++){
+        //     printf("%c",out[k]);
+        //     k++;
+        // }
     }
     
     FILE *deciphered  = fopen("decrypted", "wb");
 
-    int excess= (int)out[n-1];
-    //printf("%02X",out[n-1]); endl
-    for(int i=0; i<n-excess ; i++){
+    int padded= (int)out[n-1];
+    //printf("",out[n-1]); endl
+    
+    for(int i=0; i<n-padded; i++){
         fputc(out[i],deciphered);
     }  
 
