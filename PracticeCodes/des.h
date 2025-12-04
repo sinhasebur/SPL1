@@ -1,16 +1,15 @@
-
 void swapBits(char* string);
-void swap(char* a, char* b);
+void swap(char* left, char* right);
 void mangler(char* temp, int* key);
-void fillExpansionMatrix(char* temp, int* x);
-void charToBinary(char c, int*x);
-void sbox(int* x, int* z);
-int binToInt(int x);
-void pbox(int* x);
-void int32bitstoChar(int* x, char* y);
+void fillExpansionMatrix(char* text, int* returnData );
+void charToBinary(char c, int*binary);
+void sbox(int* data, int* returnData);
+int binToInt(int data);
+void pbox(int* data);
+void int32bitstoChar(int* data, char* returnchar);
 void xOr(char * x, char* y);
-void encrypt(char* x ,int* y, char* z);
-void decrypt(char* x, int* y, char* z);
+void DES_Encrypt(char* plaintext ,int* key, char* cipherText);
+void DES_Decrypt(char* cipherText, int* key, char* decryptedText);
 void permutedChoice1(int *x, int *y);
 void permutedChoice2(int *x, int *y);
 void lcs(int *x);
@@ -18,7 +17,7 @@ void getKeys(int* x, int* y);
 
 
 
-void decrypt(char* x, int * z, char* y)
+void DES_Decrypt(char* x, int * key, char* y)
 {
 
     char l[4],r[4];
@@ -29,7 +28,7 @@ void decrypt(char* x, int * z, char* y)
     for(int i=0;i<4; i++) r[i]=cipherText[4+i];
 
     int keys[16][48];
-    getKeys(z, keys[0]);
+    getKeys(key, keys[0]);
 
     for(int i=15;i>=0;i--){
         char rtemp[4],ltemp[4];
@@ -58,7 +57,7 @@ void decrypt(char* x, int * z, char* y)
 
 
 
-void encrypt(char* x, int * y, char* z)
+void DES_Encrypt(char* x, int * y, char* z)
 {
 
     char plainText[9];
@@ -128,11 +127,11 @@ void swap(char* a, char* b)
 
 
 
-void mangler (char* temp, int* key)
+void mangler (char* text, int* key)
 {
 
     int expandedMatrix[48];
-    fillExpansionMatrix(temp,expandedMatrix);
+    fillExpansionMatrix(text ,expandedMatrix);
 
     for(int i=0;i<48;i++){
         expandedMatrix[i]=expandedMatrix[i] ^ key[i];
@@ -145,7 +144,7 @@ void mangler (char* temp, int* key)
 
     pbox(matrix);
 
-    int32bitstoChar(matrix, temp);
+    int32bitstoChar(matrix, text );
 
 }
 
@@ -154,11 +153,11 @@ void mangler (char* temp, int* key)
 
 
 
-void fillExpansionMatrix(char* x,int *y)
+void fillExpansionMatrix(char* text,int *returnData)
 {
     int matrix[4][8];
     for(int i=0;i<4;i++){
-        charToBinary((unsigned char)x[i],matrix[i]);
+        charToBinary((unsigned char)text[i],matrix[i]);
     }
     int linearForm[32];
     for(int i=0;i<4;i++){
@@ -179,7 +178,7 @@ void fillExpansionMatrix(char* x,int *y)
 
         int k=0;
         for(int i=0;i<48;i++){
-            y[i] =linearForm[expansionMatrix[i]-1];
+            returnData[i] =linearForm[expansionMatrix[i]-1];
         }
 
 }
