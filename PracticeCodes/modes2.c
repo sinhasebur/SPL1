@@ -20,6 +20,10 @@ void cbc_decrypt( int blockSize, int* key, uchar* filename, uchar* iv, uchar* en
 // corruption easily 
 
 
+void cfb_encrypt(  int blockSize, int* key, uchar* filename, uchar* iv, uchar* encryption);
+void cfb_decrypt( int blockSize, int* key, uchar* filename, uchar* iv, uchar* encryption);
+// stream cipher, character by character
+
 
 
 // padding PKCS#7
@@ -37,9 +41,9 @@ int main()
 
     uchar iv[8]={'a','b','c','d','e','f','g','h'};
 
-    cbc_encrypt(64,key2, "input",iv, "2des");
+    cfb_encrypt(64,key2, "input",iv, "2des");
 
-    cbc_decrypt(64,key2,"encrypted",iv, "2des");
+    cfb_decrypt(64,key2,"encrypted",iv, "2des");
 
 }
 
@@ -325,3 +329,89 @@ void cbc_decrypt( int blockSize, int* key, uchar* file,  uchar* iv, uchar* encry
 
 
 
+
+
+
+void cfb_encrypt( int blockSize, int* key, uchar* filename,  uchar* iv, uchar* encryption)
+{
+    int bytes=blockSize/8;
+
+    FILE *text  = fopen(filename, "rb");
+
+    if(!text){
+        printf("Input file %s not found", filename); endl
+        return;
+    }
+
+    uchar output[bytes];
+    uchar outText[bytes];
+
+    memcpy(output, iv, sizeof(uchar)*bytes);
+
+    FILE *encrypted  = fopen("encrypted", "wb");
+
+    
+
+    encrypt(output, key,outText,encryption);
+    
+    int i;
+    uchar discard[bytes-1];
+    uchar select;
+    while((i=fgetc(text))!=EOF){
+        select=outText[0];
+        //memcpy(discard, outText[1],sizeof(uchar)*(bytes-1) );
+        for(int i=1;i<bytes;i++) discard[i-1]=outText[i];
+        select=select^i;
+        fputc(select, encrypted);
+        memcpy(outText,discard,sizeof(uchar)*(bytes-1) );
+        outText[bytes-1]=select;
+    }
+
+    fclose(encrypted);
+    fclose(text);
+
+    
+}
+
+
+
+void cfb_decrypt( int blockSize, int* key, uchar* filename,  uchar* iv, uchar* encryption)
+{
+    int bytes=blockSize/8;
+
+    FILE *ciphertext  = fopen(filename, "rb");
+
+    if(!ciphertext){
+        printf("Encryption file %s not found", filename); endl
+        return;
+    }
+
+    uchar output[bytes];
+    uchar outText[bytes];
+
+    memcpy(output, iv, sizeof(uchar)*bytes);
+
+    FILE *decrypted  = fopen("decrypted", "wb");
+
+    
+
+    encrypt(output, key,outText,encryption);
+    
+    
+    int i;
+    uchar discard[bytes-1];
+    uchar select;
+    while((i=fgetc(ciphertext))!=EOF){
+        select=outText[0];
+        //memcpy(discard, outText[1],sizeof(uchar)*(bytes-1) );
+        for(int i=1;i<bytes;i++) discard[i-1]=outText[i];
+        select=select^i;
+        fputc(select, decrypted);
+        memcpy(outText,discard,sizeof(uchar)*(bytes-1) );
+        outText[bytes-1]=i;
+    }
+
+    fclose(decrypted);
+    fclose(ciphertext);
+
+}    
