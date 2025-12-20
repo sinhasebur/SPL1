@@ -7,7 +7,7 @@
 #define uchar unsigned char
 
 
-void xor(uchar *x, uchar* y, int n);
+void xor(uchar *output, uchar* other, int n);
 
 
 
@@ -25,6 +25,8 @@ void cfb_decrypt( int blockSize, int* key, uchar* filename, uchar* iv, uchar* en
 // stream cipher, character by character
 
 
+void ofb_encrypt(  int blockSize, int* key, uchar* filename, uchar* iv, uchar* encryption);
+void ofb_decrypt( int blockSize, int* key, uchar* filename, uchar* iv, uchar* encryption);
 
 // padding PKCS#7
 int pkcs7_Pad(int blockSize,FILE* filename, uchar ** textstream ); // returns blocks needed
@@ -41,9 +43,9 @@ int main()
 
     uchar iv[8]={'a','b','c','d','e','f','g','h'};
 
-    cfb_encrypt(64,key2, "input",iv, "2des");
+    ofb_encrypt(64,key2, "input",iv, "2des");
 
-    cfb_decrypt(64,key2,"encrypted",iv, "2des");
+    ofb_decrypt(64,key2,"encrypted",iv, "2des");
 
 }
 
@@ -250,11 +252,11 @@ void cbc_encrypt( int blockSize, int* key, uchar* filename,  uchar* iv, uchar* e
 }
 
 
-void xor(uchar *y, uchar* x, int n){
+void xor(uchar *output, uchar* other, int n){
 
     for(int i=0; i<n;i++){
-        int tx=x[i], ty=y[i];
-        y[i]= tx^ty;
+        int tx=other[i], ty=output[i];
+        output[i]= tx^ty;
     }
 
 }
@@ -415,3 +417,130 @@ void cfb_decrypt( int blockSize, int* key, uchar* filename,  uchar* iv, uchar* e
     fclose(ciphertext);
 
 }    
+
+
+
+
+void ofb_encrypt( int blockSize, int* key, uchar* filename,  uchar* nonce, uchar* encryption)
+{
+    int bytes=blockSize/8;
+
+    FILE *text  = fopen(filename, "rb");
+
+    if(!text){
+        printf("Input file %s not found", filename); endl
+        return;
+    }
+
+    uchar enc_part [bytes];
+    uchar select [bytes];
+
+    for(int i=0;i<bytes;i++) select[i]=0;
+    encrypt(nonce,key, enc_part, encryption);
+    
+    uchar count[bytes];
+
+    FILE *encrypted  = fopen("encrypted", "wb");
+
+    int i,k=0;
+    int loop=1;
+    while(loop){
+        k=0;
+      
+        while( k<bytes){
+            if((i=fgetc(text))!=EOF){
+                count[k]=i;
+            }
+            else {loop=0; break;}
+            k++;
+        }  
+
+        for(int i=0;i<k;i++){
+            select[i]=count[i];
+        }
+
+        if(bytes==k){
+            xor(select, enc_part,bytes);
+        }
+        else{
+            xor(select, enc_part,k);
+        }
+        
+
+        uchar temp [bytes];
+        encrypt(enc_part, key, temp, encryption);
+        memcpy(enc_part,temp, sizeof(uchar)*bytes);
+        
+        for(int i=0;i<k;i++){
+            fputc(select[i],encrypted);
+        }
+    
+    }
+         
+    fclose(text);
+    fclose(encrypted);
+   
+}
+
+
+
+void ofb_decrypt( int blockSize, int* key, uchar* filename,  uchar* nonce, uchar* encryption)
+{
+    int bytes=blockSize/8;
+
+    FILE *ciphertext  = fopen(filename, "rb");
+
+    if(!ciphertext){
+        printf("Encrypted file %s not found", filename); endl
+        return;
+    }
+
+    uchar enc_part [bytes];
+    uchar select [bytes];
+
+    for(int i=0;i<bytes;i++) select[i]=0;
+    encrypt(nonce,key, enc_part, encryption);
+    
+    uchar count[bytes];
+
+    FILE *decrypted  = fopen("decrypted", "wb");
+
+    int i,k=0;
+    int loop=1;
+    while(loop){
+        k=0;
+      
+        while( k<bytes){
+            if((i=fgetc(ciphertext))!=EOF){
+                count[k]=i;
+            }
+            else {loop=0; break;}
+            k++;
+        }  
+
+        for(int i=0;i<k;i++){
+            select[i]=count[i];
+        }
+
+        if(bytes==k){
+            xor(select, enc_part,bytes);
+        }
+        else{
+            xor(select, enc_part,k);
+        }
+        
+
+        uchar temp [bytes];
+        encrypt(enc_part, key, temp, encryption);
+        memcpy(enc_part,temp, sizeof(uchar)*bytes);
+        
+        for(int i=0;i<k;i++){
+            fputc(select[i],decrypted);
+        }
+    
+    }
+         
+    fclose(ciphertext);
+    fclose(decrypted);
+   
+}
