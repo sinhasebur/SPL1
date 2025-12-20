@@ -1,0 +1,11 @@
+CC = gcc
+this mean, CC will be replaced with the string gcc when $(CC)
+
+CC = $(CC)
+makes infinite loop
+
+
+
+
+
+

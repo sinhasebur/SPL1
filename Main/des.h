@@ -1,21 +1,22 @@
 #ifndef DES_H 
 #define DES_H
 
-void swapBits(char* string);
-void swap(char* a, char* b);
-void mangler(char* temp, int* key);
-void fillExpansionMatrix(char* temp, int* x);
-void charToBinary(char c, int*x);
-void sbox(int* x, int* z);
-int binToInt(int x);
-void pbox(int* x);
-void int32bitstoChar(int* x, char* y);
-void xOr(char * x, char* y);
-void encrypt(char* x ,int* z);
-void decrypt(char* x, int* z);
+void swapBits(unsigned char* string);
+void swap(unsigned  char* left, unsigned char* right);
+void mangler( unsigned char* temp, int* key);
+void fillExpansionMatrix( unsigned char* text, int* returnData );
+void charToBinary( unsigned  char c, int*binary);
+void sbox(int* data, int* returnData);
+int binToInt(int data);
+void pbox(int* data);
+void int32bitstoChar(int* data,unsigned  char* returnchar);
+void xOr(unsigned char * x, unsigned  char* y);
+void DES_Encrypt(unsigned  char* plaintext ,int* key,unsigned  char* cipherText);
+void DES_Decrypt(unsigned char* cipherText, int* key,unsigned  char* decryptedText);
 void permutedChoice1(int *x, int *y);
 void permutedChoice2(int *x, int *y);
 void lcs(int *x);
 void getKeys(int* x, int* y);
+
 
 #endif

@@ -1,0 +1,513 @@
+#include <stdio.h>
+#include <string.h>
+#include "modes.h"
+#include "encryption.h"
+#include <stdlib.h>
+
+#define endl printf("\n");
+
+int pkcs7_Pad(int blockSize,FILE* text , unsigned char** textstream)
+{
+    int bytes=blockSize/8;
+    long long n=0;
+    unsigned char x;
+    int i;
+
+    while((i=fgetc(text))!=EOF){
+        n++;
+    }
+    
+    fseek(text, 0, SEEK_SET);
+
+    long long blockNum= n/bytes;
+    long long allocate= ((blockNum+1)*bytes);
+    int excess=n%bytes;
+
+    (*textstream)= malloc(allocate);
+
+    for(int i=0; i<n - excess; i++){
+        x=fgetc(text);
+        if(x==EOF) break;
+        else (*textstream)[i]=x;
+    }
+
+    int k=excess;
+
+    for(int i=0;i<bytes;i++){
+
+        if(i<k){
+            x=fgetc(text);
+            (*textstream)[blockNum*bytes+i]=x;
+        }
+        else{
+            (*textstream)[blockNum*bytes+i]=bytes-excess;
+        }
+    }
+
+    blockNum++;
+    return blockNum;
+}
+
+
+void pkcs7_remove_Pad(int blockSize,FILE* decrypted,unsigned char** outstream , int size)
+{
+    int padded= (*outstream)[size];
+
+    for(int i=0; i<size-padded; i++){
+        fputc((*outstream)[i],decrypted);
+    }
+}
+
+
+
+
+
+
+void ecb_encrypt(int blockSize,  int* key, unsigned char * filename, unsigned char* encryptionType)
+{
+
+    int bytes=blockSize/8;
+
+    FILE *text  = fopen(filename, "rb");
+
+    if(!text){
+        printf("Input file %s not found", filename); endl
+        return;
+    }
+
+    unsigned char* textstream;
+
+    long long blockNum= pkcs7_Pad( blockSize, text , &textstream);
+
+    long long allocate= (blockNum*bytes);
+
+
+
+    unsigned char* cipherTextStream= malloc(sizeof(unsigned char) * allocate);
+    for(int i=0;i<blockNum;i++){
+        encrypt(textstream+ i*bytes,key,cipherTextStream + i*bytes, encryptionType);
+    }
+
+
+    FILE *cipher  = fopen("encrypted", "wb");
+
+    for(int i=0; i<allocate ; i++){
+        fputc(cipherTextStream[i],cipher);
+    }
+
+    fclose(text);
+    fclose(cipher);
+    free(cipherTextStream);
+    free(textstream);
+
+}
+
+
+void ecb_decrypt(int blockSize, int* key, unsigned char* file ,unsigned char* encryptionType )
+{
+    int bytes=blockSize/8;
+    FILE *text  = fopen(file, "rb");
+
+    if(!text){
+        printf("File to decrypt %s not found", file); endl
+        return;
+    }
+
+
+    long long n=0;
+    unsigned char x;
+    int i;
+
+    while((i=fgetc(text))!=EOF){
+        n++;
+    }
+
+    fseek(text, 0, SEEK_SET);
+
+
+    long long blockNum= n/bytes;
+    long long allocate= ((blockNum)*bytes);
+
+
+    unsigned char* textstream= malloc(allocate);
+
+    for(int i=0; i<n ; i++){
+        x=fgetc(text);
+        if(x==EOF){
+            printf("encrypted file reading error, Check encrpytion"); endl
+            break;
+        }
+        else
+            textstream[i]=x;
+    }
+
+    unsigned char* out= malloc(sizeof(unsigned char) * n);
+
+    int k=0;
+    for(int i=0;i<blockNum;i++){
+        decrypt(textstream+ i*bytes,key,out+ i*bytes, encryptionType);
+    }
+
+    FILE *deciphered  = fopen("decrypted", "wb");
+
+    pkcs7_remove_Pad(blockSize, deciphered , &out, n-1);
+
+    fclose(text);
+    fclose(deciphered);
+    free(textstream);
+    free(out);
+
+}
+
+
+
+
+
+
+
+void cbc_encrypt( int blockSize, int* key, unsigned char* filename,  unsigned char* iv, unsigned char* encryptionType)
+{
+    int bytes=blockSize/8;
+
+    FILE *text  = fopen(filename, "rb");
+
+    if(!text){
+        printf("Input file %s not found", filename); endl
+        return;
+    }
+
+    unsigned char* textstream;
+
+    long long blockNum= pkcs7_Pad( blockSize, text , &textstream);
+
+    long long allocate= (blockNum*bytes);
+
+
+
+    unsigned char* cipherTextStream= malloc(sizeof(unsigned char) * allocate);
+    unsigned char* previous=malloc(sizeof(unsigned char) * bytes);
+    for(int i=0;i<blockNum;i++){
+        if(i==0){
+            xor(textstream, iv, bytes);
+        }
+        else{
+            xor(textstream+ i*bytes,previous, bytes);
+        }
+        encrypt(textstream+ i*bytes,key,cipherTextStream + i*bytes, encryptionType);
+        memcpy(previous,(cipherTextStream+i*bytes),sizeof(unsigned char)*bytes);
+    }
+
+
+    FILE *cipher  = fopen("encrypted", "wb");
+
+    for(int i=0; i<allocate ; i++){
+        fputc(cipherTextStream[i],cipher);
+    }
+
+    fclose(text);
+    fclose(cipher);
+    free(cipherTextStream);
+    free(textstream);
+
+}
+
+
+
+void cbc_decrypt( int blockSize, int* key, unsigned char* file,  unsigned char* iv, unsigned char* encryptionType)
+{
+    int bytes=blockSize/8;
+    FILE *text  = fopen(file, "rb");
+
+    if(!text){
+        printf("File to decrypt %s not found", file); endl
+        return;
+    }
+
+
+    long long n=0;
+    unsigned char x;
+    int i;
+
+    while((i=fgetc(text))!=EOF){
+        n++;
+    }
+
+    fseek(text, 0, SEEK_SET);
+
+
+    long long blockNum= n/bytes;
+    long long allocate= ((blockNum)*bytes);
+
+
+    unsigned char* textstream= malloc(allocate);
+
+    for(int i=0; i<n ; i++){
+        x=fgetc(text);
+        if(x==EOF){
+            printf("encrypted file reading error, Check encrpytion"); endl
+            break;
+        }
+        else
+            textstream[i]=x;
+    }
+
+    unsigned char* out= malloc(sizeof(unsigned char) * n);
+
+    unsigned char* previous=malloc(sizeof(unsigned char) * bytes);
+
+    for(int i=0;i<blockNum;i++){
+        
+        decrypt(textstream+ i*bytes,key,out + i*bytes, encryptionType);
+        if(i==0){
+            xor(out+ i*bytes, iv, bytes);
+        }
+        else{
+            xor(out+ i*bytes,previous,bytes);
+        }
+        
+        memcpy(previous,textstream + i*bytes, sizeof(unsigned char)*bytes);
+    }
+
+    FILE *deciphered  = fopen("decrypted", "wb");
+
+    pkcs7_remove_Pad(blockSize, deciphered , &out, n-1);
+
+
+
+    fclose(text);
+    fclose(deciphered);
+    free(textstream);
+    free(out);
+}
+
+
+
+
+
+
+
+
+
+void cfb_encrypt( int blockSize, int* key, unsigned char* filename,  unsigned char* iv, unsigned char* encryptionType)
+{
+    int bytes=blockSize/8;
+
+    FILE *text  = fopen(filename, "rb");
+
+    if(!text){
+        printf("Input file %s not found", filename); endl
+        return;
+    }
+
+    unsigned char output[bytes];
+    unsigned char outText[bytes];
+
+    memcpy(output, iv, sizeof(unsigned char)*bytes);
+
+    FILE *encrypted  = fopen("encrypted", "wb");
+
+    
+
+    encrypt(output, key,outText,encryptionType);
+    
+    int i;
+    unsigned char discard[bytes-1];
+    unsigned char select;
+    while((i=fgetc(text))!=EOF){
+        select=outText[0];
+        //memcpy(discard, outText[1],sizeof(unsigned char)*(bytes-1) );
+        for(int i=1;i<bytes;i++) discard[i-1]=outText[i];
+        select=select^i;
+        fputc(select, encrypted);
+        memcpy(outText,discard,sizeof(unsigned char)*(bytes-1) );
+        outText[bytes-1]=select;
+    }
+
+    fclose(encrypted);
+    fclose(text);
+
+    
+}
+
+
+void cfb_decrypt( int blockSize, int* key, unsigned char* filename,  unsigned char* iv, unsigned char* encryptionType)
+{
+    int bytes=blockSize/8;
+
+    FILE *ciphertext  = fopen(filename, "rb");
+
+    if(!ciphertext){
+        printf("encryptionType file %s not found", filename); endl
+        return;
+    }
+
+    unsigned char output[bytes];
+    unsigned char outText[bytes];
+
+    memcpy(output, iv, sizeof(unsigned char)*bytes);
+
+    FILE *decrypted  = fopen("decrypted", "wb");
+
+    
+
+    encrypt(output, key,outText,encryptionType);
+    
+    
+    int i;
+    unsigned char discard[bytes-1];
+    unsigned char select;
+    while((i=fgetc(ciphertext))!=EOF){
+        select=outText[0];
+        //memcpy(discard, outText[1],sizeof(unsigned char)*(bytes-1) );
+        for(int i=1;i<bytes;i++) discard[i-1]=outText[i];
+        select=select^i;
+        fputc(select, decrypted);
+        memcpy(outText,discard,sizeof(unsigned char)*(bytes-1) );
+        outText[bytes-1]=i;
+    }
+
+    fclose(decrypted);
+    fclose(ciphertext);
+
+}    
+
+
+
+
+
+
+
+void ofb_encrypt( int blockSize, int* key, unsigned char* filename,  unsigned char* nonce, unsigned char* encryptionType)
+{
+    int bytes=blockSize/8;
+
+    FILE *text  = fopen(filename, "rb");
+
+    if(!text){
+        printf("Input file %s not found", filename); endl
+        return;
+    }
+
+    unsigned char enc_part [bytes];
+    unsigned char select [bytes];
+
+    for(int i=0;i<bytes;i++) select[i]=0;
+    encrypt(nonce,key, enc_part, encryptionType);
+    
+    unsigned char count[bytes];
+
+    FILE *encrypted  = fopen("encrypted", "wb");
+
+    int i,k=0;
+    int loop=1;
+    while(loop){
+        k=0;
+      
+        while( k<bytes){
+            if((i=fgetc(text))!=EOF){
+                count[k]=i;
+            }
+            else {loop=0; break;}
+            k++;
+        }  
+
+        for(int i=0;i<k;i++){
+            select[i]=count[i];
+        }
+
+        if(bytes==k){
+            xor(select, enc_part,bytes);
+        }
+        else{
+            xor(select, enc_part,k);
+        }
+        
+
+        unsigned char temp [bytes];
+        encrypt(enc_part, key, temp, encryptionType);
+        memcpy(enc_part,temp, sizeof(unsigned char)*bytes);
+        
+        for(int i=0;i<k;i++){
+            fputc(select[i],encrypted);
+        }
+    
+    }
+         
+    fclose(text);
+    fclose(encrypted);
+   
+}
+
+
+void ofb_decrypt( int blockSize, int* key, unsigned char* filename,  unsigned char* nonce, unsigned char* encryptionType)
+{
+    int bytes=blockSize/8;
+
+    FILE *ciphertext  = fopen(filename, "rb");
+
+    if(!ciphertext){
+        printf("Encrypted file %s not found", filename); endl
+        return;
+    }
+
+    unsigned char enc_part [bytes];
+    unsigned char select [bytes];
+
+    for(int i=0;i<bytes;i++) select[i]=0;
+    encrypt(nonce,key, enc_part, encryptionType);
+    
+    unsigned char count[bytes];
+
+    FILE *decrypted  = fopen("decrypted", "wb");
+
+    int i,k=0;
+    int loop=1;
+    while(loop){
+        k=0;
+      
+        while( k<bytes){
+            if((i=fgetc(ciphertext))!=EOF){
+                count[k]=i;
+            }
+            else {loop=0; break;}
+            k++;
+        }  
+
+        for(int i=0;i<k;i++){
+            select[i]=count[i];
+        }
+
+        if(bytes==k){
+            xor(select, enc_part,bytes);
+        }
+        else{
+            xor(select, enc_part,k);
+        }
+        
+
+        unsigned char temp [bytes];
+        encrypt(enc_part, key, temp, encryptionType);
+        memcpy(enc_part,temp, sizeof(unsigned char)*bytes);
+        
+        for(int i=0;i<k;i++){
+            fputc(select[i],decrypted);
+        }
+    
+    }
+         
+    fclose(ciphertext);
+    fclose(decrypted);
+   
+}
+
+
+
+
+void xor(unsigned char *output, unsigned char* other, int n){
+
+    for(int i=0; i<n;i++){
+        int tx=other[i], ty=output[i];
+        output[i]= tx^ty;
+    }
+
+}

@@ -1,26 +1,28 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "des.h"
+#include "2des.h"
+#include "3des.h"
+#include "modes.h"
+
 
 #define endl printf("\n");
 
 
 
 int main(){
-    char a[8]={'a','b','c','d','a','b','c','d'};
     int key[64] = {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1};
-    //des(a,key);
-    char ciphertext[8];
+    int key2[128]={1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0};
+    //ecb_encrypy(64,key, "input");
 
-    encrypt(a,key);
+    //ecb_decrypy(64,key,"encrypted");
 
-    printf("asl'kdjf;lkajsdl;kfjas;dlkjf;lkajsd;lkfhjasd");
+    uchar iv[8]={'a','b','c','d','e','f','g','h'};
 
-    for(int i=0;i<8;i++) printf("%02X ",a[i]);
-    decrypt(a,key);
+    cbc_encrypt(64,key2, "input",iv, "2des");
 
-    //for(int i=0;i<8;i++) printf("%02X",ciphertext[i]);
+    cbc_decrypt(64,key2,"encrypted",iv, "2des");
 
-    //decrypt(ciphertext,key);
 
 }

@@ -1,39 +1,38 @@
+#include "des.h"
+#include <string.h>
 
-
-
-
-void decrypt(char* x, int * z)
+void DES_Decrypt(unsigned char* x, int * key,unsigned  char* y)
 {
 
-    char l[4],r[4];
-    char cipherText[8];
+    unsigned char l[4],r[4];
+    unsigned char cipherText[8];
 
     for(int i=0;i<8;i++) cipherText[i]=x[i];
     for(int i=0;i<4; i++) l[i]=cipherText[i];
     for(int i=0;i<4; i++) r[i]=cipherText[4+i];
 
     int keys[16][48];
-    getKeys(z, keys[0]);
+    getKeys(key, keys[0]);
 
     for(int i=15;i>=0;i--){
-        char rtemp[4],ltemp[4];
-        memcpy(rtemp,r, 4*sizeof(char));
-        memcpy(ltemp,l, 4*sizeof(char));
+        unsigned char rtemp[4],ltemp[4];
+        memcpy(rtemp,r, 4*sizeof(unsigned char));
+        memcpy(ltemp,l, 4*sizeof(unsigned char));
 
 
         mangler(l,keys[i]);
         xOr(rtemp,l);
 
-        memcpy(r,ltemp,4*sizeof(char));
+        memcpy(r,ltemp,4*sizeof(unsigned char));
 
     }
 
-    char decipherText[8];
-    for(int i=0;i<4; i++) decipherText[i]=l[i];
-    for(int i=0;i<4; i++) decipherText[4+i]=r[i];
+    unsigned char decipherText[8];
+    for(int i=0;i<4; i++) decipherText[i]=r[i];
+    for(int i=0;i<4; i++) decipherText[4+i]=l[i];
 
     for(int i=0; i<8; i++) {
-        x[i]=decipherText[i];
+        y[i]=decipherText[i];
     }
 }
 
@@ -42,10 +41,10 @@ void decrypt(char* x, int * z)
 
 
 
-void encrypt(char* x, int * y)
+void DES_Encrypt(unsigned char* x, int * y,unsigned  char* z)
 {
 
-    char plainText[9];
+    unsigned char plainText[9];
     for(int i=0;i<8;i++){plainText[i]=x[i];}
 
     int key[64];
@@ -53,37 +52,33 @@ void encrypt(char* x, int * y)
 
     swapBits(plainText);
 
-    char l[4]={plainText[0],plainText[1],plainText[2],plainText[3]};
-    char r[4]={plainText[4],plainText[5],plainText[6],plainText[7]};
+    unsigned char l[4]={plainText[0],plainText[1],plainText[2],plainText[3]};
+    unsigned char r[4]={plainText[4],plainText[5],plainText[6],plainText[7]};
 
     int keys[16][48];
     getKeys(key, keys[0]);
 
     for(int i=0;i<16;i++){
 
-        for(int i=0; i<4; i++) printf("%02X ", l[i]);
-        for(int i=0; i<4; i++) printf("%02X ", r[i]);
-
-
-        char rtemp[4],ltemp[4];
-        memcpy(rtemp,r, 4*sizeof(char));
-        memcpy(ltemp,l, 4*sizeof(char));
+        unsigned char rtemp[4],ltemp[4];
+        memcpy(rtemp,r, 4*sizeof(unsigned char));
+        memcpy(ltemp,l, 4*sizeof(unsigned char));
 
 
         mangler(r, keys[i]); // changes r
 
 
         xOr(ltemp, r);// this func puts xOred value in r
-        memcpy(l,rtemp, 4*sizeof(char));
+        memcpy(l,rtemp, 4*sizeof(unsigned char));
     }
 
 
-    char cipherText[8];
+    unsigned char cipherText[8];
     for(int i=0;i<4; i++) cipherText[i]=l[i];
     for(int i=0;i<4; i++) cipherText[4+i]=r[i];
 
     for(int i=0; i<8; i++) {
-        x[i]=cipherText[i];
+        z[i]=cipherText[i];
     }
 
 }
@@ -93,7 +88,7 @@ void encrypt(char* x, int * y)
 
 
 
-void swapBits(char* temp)
+void swapBits(unsigned char* temp)
 {
     for(int i=0;i<4;i++){
         swap(&temp[i],&temp[4+i]);
@@ -105,9 +100,9 @@ void swapBits(char* temp)
 
 
 
-void swap(char* a, char* b)
+void swap(unsigned char* a,unsigned  char* b)
 {
-    char temp;
+    unsigned char temp;
     temp=*a; *a=*b; *b=temp;
 }
 
@@ -116,11 +111,11 @@ void swap(char* a, char* b)
 
 
 
-void mangler (char* temp, int* key)
+void mangler (unsigned char* text, int* key)
 {
 
     int expandedMatrix[48];
-    fillExpansionMatrix(temp,expandedMatrix);
+    fillExpansionMatrix(text ,expandedMatrix);
 
     for(int i=0;i<48;i++){
         expandedMatrix[i]=expandedMatrix[i] ^ key[i];
@@ -133,7 +128,7 @@ void mangler (char* temp, int* key)
 
     pbox(matrix);
 
-    int32bitstoChar(matrix, temp);
+    int32bitstoChar(matrix, text );
 
 }
 
@@ -142,11 +137,11 @@ void mangler (char* temp, int* key)
 
 
 
-void fillExpansionMatrix(char* x,int *y)
+void fillExpansionMatrix(unsigned char* text,int *returnData)
 {
     int matrix[4][8];
     for(int i=0;i<4;i++){
-        charToBinary((unsigned char)x[i],matrix[i]);
+        charToBinary((unsigned char)text[i],matrix[i]);
     }
     int linearForm[32];
     for(int i=0;i<4;i++){
@@ -165,16 +160,15 @@ void fillExpansionMatrix(char* x,int *y)
         28, 29, 28, 29, 30, 31, 32, 1};
 
 
-        int k=0;
-        for(int i=0;i<48;i++){
-            y[i] =linearForm[expansionMatrix[i]-1];
-        }
+    for(int i=0;i<48;i++){
+        returnData[i] =linearForm[expansionMatrix[i]-1];
+    }
 
 }
 
 
 
-void charToBinary(char c, int* x)
+void charToBinary(unsigned char c, int* x)
 {
 
     for (int i = 0; i < 8; i++) {
@@ -286,7 +280,7 @@ void pbox(int *x)
 }
 
 
-void int32bitstoChar(int* x, char* y){
+void int32bitstoChar(int* x,unsigned  char* y){
 
     int k=0;
     for(int i=0;i<4;i++){
@@ -296,11 +290,11 @@ void int32bitstoChar(int* x, char* y){
             if(x[k]==1)
                 temp+= (1)<<j;
         }
-        y[i]=(char)temp;
+        y[i]=(unsigned char)temp;
     }
 }
 
-void xOr(char *x, char* y){
+void xOr(unsigned char *x,unsigned  char* y){
 
     for(int i=0; i<4;i++){
         int tx=x[i], ty=y[i];
@@ -332,7 +326,6 @@ void permutedChoice1(int *x, int *y)
 
         for (int i = 0; i < 56; i++){
             y[i] = x[p1[i-1]];
-            printf("%d ",y[i]);
         }
 }
 
@@ -385,12 +378,9 @@ void getKeys(int* x, int *y)
 
     int k=0;
     for (int i = 0; i < 16; i++){
-        printf("Key Number %d:\n", i);
         for (int j = 0; j < 48; j++){
-            printf("%d ", keys[i][j]);
             y[k]=keys[i][j];
             k++;
         }
-        printf("\n");
     }
 }
