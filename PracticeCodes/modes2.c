@@ -13,22 +13,19 @@ void xor(uchar *output, uchar* other, int n);
 
 void ecb_encrypt( int blockSize, int* key, uchar* filename, uchar* encryption);
 void ecb_decrypt( int blockSize, int* key, uchar* filename, uchar* encryption);
-// issues- can leak data for images or so, needs padding
+
 
 void cbc_encrypt(  int blockSize, int* key, uchar* filename, uchar* iv, uchar* encryption);
 void cbc_decrypt( int blockSize, int* key, uchar* filename, uchar* iv, uchar* encryption);
-// corruption easily 
 
 
 void cfb_encrypt(  int blockSize, int* key, uchar* filename, uchar* iv, uchar* encryption);
 void cfb_decrypt( int blockSize, int* key, uchar* filename, uchar* iv, uchar* encryption);
-// stream cipher, character by character
 
 
 void ofb_encrypt(  int blockSize, int* key, uchar* filename, uchar* iv, uchar* encryption);
 void ofb_decrypt( int blockSize, int* key, uchar* filename, uchar* iv, uchar* encryption);
 
-// padding PKCS#7
 int pkcs7_Pad(int blockSize,FILE* filename, uchar ** textstream ); // returns blocks needed
 void pkcs7_remove_Pad(int blockSize,FILE* decrypted,uchar** outstream , int filesize);
 
@@ -37,7 +34,7 @@ int main()
 {
     int key[64] = {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1};
     int key2[128]={1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0};
-    //ecb_encrypy(64,key, "input");
+        //ecb_encrypy(64,key, "input");
 
     //ecb_decrypy(64,key,"encrypted");
 
