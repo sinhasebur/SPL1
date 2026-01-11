@@ -18,7 +18,7 @@ int main(){
 
     //ecb_decrypy(64,key,"encrypted");
 
-    uchar iv[8]={'a','b','c','d','e','f','g','h'};
+    unsigned char iv[8]={'a','b','c','d','e','f','g','h'};
 
     cbc_encrypt(64,key2, "input",iv, "2des");
 
