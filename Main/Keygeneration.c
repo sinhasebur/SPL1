@@ -16,9 +16,9 @@ int main(){
     int k1[64];
     int k2[64];
 
-    fill_IntArray(64, k1, 20);
+    fill_IntArray(64, k1, 16);
     random_state++;
-    fill_IntArray(64, k2, 20);
+    fill_IntArray(64, k2, 16);
 
     unsigned char ck1[8], ck2[8];
     toCharArray(8, k1, ck1);
