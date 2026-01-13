@@ -63,7 +63,7 @@ void pkcs7_remove_Pad(int blockSize,FILE* decrypted,unsigned char** outstream , 
 
 
 
-void ecb_encrypt(int blockSize,  int* key, unsigned char * filename, unsigned char* encryptionType)
+void ecb_encrypt(int blockSize,  int* key, char* filename, char* encryptionType)
 {
 
     int bytes=blockSize/8;
@@ -103,7 +103,7 @@ void ecb_encrypt(int blockSize,  int* key, unsigned char * filename, unsigned ch
 }
 
 
-void ecb_decrypt(int blockSize, int* key, unsigned char* file ,unsigned char* encryptionType )
+void ecb_decrypt(int blockSize, int* key, char* file ,char* encryptionType )
 {
     int bytes=blockSize/8;
     FILE *text  = fopen(file, "rb");
@@ -165,7 +165,7 @@ void ecb_decrypt(int blockSize, int* key, unsigned char* file ,unsigned char* en
 
 
 
-void cbc_encrypt( int blockSize, int* key, unsigned char* filename,  unsigned char* iv, unsigned char* encryptionType)
+void cbc_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType)
 {
     int bytes=blockSize/8;
 
@@ -213,7 +213,7 @@ void cbc_encrypt( int blockSize, int* key, unsigned char* filename,  unsigned ch
 
 
 
-void cbc_decrypt( int blockSize, int* key, unsigned char* file,  unsigned char* iv, unsigned char* encryptionType)
+void cbc_decrypt( int blockSize, int* key, char* file,  unsigned char* iv, char* encryptionType)
 {
     int bytes=blockSize/8;
     FILE *text  = fopen(file, "rb");
@@ -288,7 +288,7 @@ void cbc_decrypt( int blockSize, int* key, unsigned char* file,  unsigned char* 
 
 
 
-void cfb_encrypt( int blockSize, int* key, unsigned char* filename,  unsigned char* iv, unsigned char* encryptionType)
+void cfb_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType)
 {
     int bytes=blockSize/8;
 
@@ -330,7 +330,7 @@ void cfb_encrypt( int blockSize, int* key, unsigned char* filename,  unsigned ch
 }
 
 
-void cfb_decrypt( int blockSize, int* key, unsigned char* filename,  unsigned char* iv, unsigned char* encryptionType)
+void cfb_decrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType)
 {
     int bytes=blockSize/8;
 
@@ -377,7 +377,7 @@ void cfb_decrypt( int blockSize, int* key, unsigned char* filename,  unsigned ch
 
 
 
-void ofb_encrypt( int blockSize, int* key, unsigned char* filename,  unsigned char* nonce, unsigned char* encryptionType)
+void ofb_encrypt( int blockSize, int* key, char* filename,  unsigned char* nonce, char* encryptionType)
 {
     int bytes=blockSize/8;
 
@@ -439,7 +439,7 @@ void ofb_encrypt( int blockSize, int* key, unsigned char* filename,  unsigned ch
 }
 
 
-void ofb_decrypt( int blockSize, int* key, unsigned char* filename,  unsigned char* nonce, unsigned char* encryptionType)
+void ofb_decrypt( int blockSize, int* key, char* filename,  unsigned char* nonce, char* encryptionType)
 {
     int bytes=blockSize/8;
 

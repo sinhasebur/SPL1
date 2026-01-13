@@ -5,7 +5,7 @@
 #include "3des.h"
 #include <stdio.h>
 
-void encrypt(unsigned char* text, int* key, unsigned char* cipherText, unsigned char* encryptiontype)
+void encrypt(unsigned char* text, int* key, unsigned char* cipherText, char* encryptiontype)
 {
     int type= getType(encryptiontype);
 
@@ -38,7 +38,7 @@ void encrypt(unsigned char* text, int* key, unsigned char* cipherText, unsigned 
 
 
 
-void decrypt(unsigned char* cipherText, int* key, unsigned char* resultText, unsigned char* encryptiontype)
+void decrypt(unsigned char* cipherText, int* key, unsigned char* resultText,  char* encryptiontype)
 {
     int type=getType(encryptiontype);
 
@@ -68,7 +68,7 @@ void decrypt(unsigned char* cipherText, int* key, unsigned char* resultText, uns
 
 
 
-int getType(unsigned char* x){
+int getType( char* x){
     if(x[0]=='D'||x[0]=='d'){
         return 1;
     }
