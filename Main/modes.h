@@ -3,7 +3,7 @@
 
 
 
-void xor(unsigned char *output, unsigned char* other, int n);
+void Xor(unsigned char *output, unsigned char* other, int n);
 
 void ecb_encrypt( int blockSize, int* key, char* filename, char* encryption);
 void ecb_decrypt( int blockSize, int* key, char* filename, char* encryption);

@@ -188,10 +188,10 @@ void cbc_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
     unsigned char* previous=malloc(sizeof(unsigned char) * bytes);
     for(int i=0;i<blockNum;i++){
         if(i==0){
-            xor(textstream, iv, bytes);
+            Xor(textstream, iv, bytes);
         }
         else{
-            xor(textstream+ i*bytes,previous, bytes);
+            Xor(textstream+ i*bytes,previous, bytes);
         }
         encrypt(textstream+ i*bytes,key,cipherTextStream + i*bytes, encryptionType);
         memcpy(previous,(cipherTextStream+i*bytes),sizeof(unsigned char)*bytes);
@@ -259,10 +259,10 @@ void cbc_decrypt( int blockSize, int* key, char* file,  unsigned char* iv, char*
         
         decrypt(textstream+ i*bytes,key,out + i*bytes, encryptionType);
         if(i==0){
-            xor(out+ i*bytes, iv, bytes);
+            Xor(out+ i*bytes, iv, bytes);
         }
         else{
-            xor(out+ i*bytes,previous,bytes);
+            Xor(out+ i*bytes,previous,bytes);
         }
         
         memcpy(previous,textstream + i*bytes, sizeof(unsigned char)*bytes);
@@ -416,10 +416,10 @@ void ofb_encrypt( int blockSize, int* key, char* filename,  unsigned char* nonce
         }
 
         if(bytes==k){
-            xor(select, enc_part,bytes);
+            Xor(select, enc_part,bytes);
         }
         else{
-            xor(select, enc_part,k);
+            Xor(select, enc_part,k);
         }
         
 
@@ -478,10 +478,10 @@ void ofb_decrypt( int blockSize, int* key, char* filename,  unsigned char* nonce
         }
 
         if(bytes==k){
-            xor(select, enc_part,bytes);
+            Xor(select, enc_part,bytes);
         }
         else{
-            xor(select, enc_part,k);
+            Xor(select, enc_part,k);
         }
         
 
@@ -503,7 +503,7 @@ void ofb_decrypt( int blockSize, int* key, char* filename,  unsigned char* nonce
 
 
 
-void xor(unsigned char *output, unsigned char* other, int n){
+void Xor(unsigned char *output, unsigned char* other, int n){
 
     for(int i=0; i<n;i++){
         int tx=other[i], ty=output[i];

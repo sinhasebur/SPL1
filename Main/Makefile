@@ -4,7 +4,7 @@ LDFLAGS := -lm
 
 TARGET := driver
 
-SRCS :=  driver.c des.c 2des.c 3des.c encryption.c modes.c
+SRCS :=   des.c 2des.c 3des.c encryption.c modes.c desKnownTextAttack.c
 OBJS := $(SRCS:.c=.o)
 
 
