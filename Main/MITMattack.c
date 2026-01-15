@@ -8,22 +8,22 @@
 
 #define endl printf("\n");
 
-#define keybits 16
+#define keybits 20
 #define keyspace (1U<<keybits)
 
 
 typedef struct {
     __uint64_t X;
-    __uint16_t key;
+    __uint64_t key;
 } middleEntry;
 
 
 void swapEntry(middleEntry* a, middleEntry* b);
-int partition(middleEntry* a, int high, int low);
-void quicksort(middleEntry* a, int high , int low);
+int partition(middleEntry* a, int low, int high);
+void quicksort(middleEntry* a, int low , int high);
+void MITM();
 
-
-int main(){
+void MITM(){
     
     int key2[128]={1 ,1 ,0 ,0 ,0 ,0 ,1 ,0 ,1 ,0 ,1 ,1 ,1 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0, 0 ,1 ,0 ,1 ,0 ,1 ,0 ,0 ,1 ,1 ,1 ,0 ,0 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 };
 
@@ -105,7 +105,7 @@ int main(){
     quicksort(givesKey1,0, keyspace-1);
     quicksort(givesKey2,0, keyspace-1);
 
-    __uint16_t k1, k2;
+    __uint64_t k1, k2;
     int found=0;
 
     int finalGuessedKey[128]={0};
@@ -159,6 +159,8 @@ int main(){
     }
 
     ecb_decrypt(64, finalGuessedKey, "encrypted", "2des");
+
+    fclose(entext);
 
 }
 

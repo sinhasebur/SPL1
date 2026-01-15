@@ -2,3 +2,8 @@ https://en.wikipedia.org/wiki/DES_supplementary_material
 
 
 https://opensource.com/article/18/8/what-how-makefile
+
+
+https://www.geeksforgeeks.org/c/measure-execution-time-with-high-precision-in-c-c/
+
+

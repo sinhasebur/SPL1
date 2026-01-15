@@ -11,7 +11,7 @@
 
 
 
-int main(){
+void desKnownTextAttack(){
     int key[64] = {1 ,1 ,0 ,0 ,0 ,0 ,1 ,0 ,1 ,0 ,1 ,1 ,1 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 };
 
 
@@ -65,5 +65,7 @@ int main(){
     }
 
     if(found==1) ecb_decrypt(64, guessedKey, "encrypted", "des");
+    
+    fclose(entext);
     
 }
