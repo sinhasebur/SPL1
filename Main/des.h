@@ -15,7 +15,7 @@ void DES_Encrypt(unsigned  char* plaintext ,int* key,unsigned  char* cipherText)
 void DES_Decrypt(unsigned char* cipherText, int* key,unsigned  char* decryptedText);
 void permutedChoice1(int *x, int *y);
 void permutedChoice2(int *x, int *y);
-void lcs(int *x);
+void leftCircularShift(int *x);
 void getKeys(int* x, int* y);
 
 

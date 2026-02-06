@@ -4,7 +4,7 @@
 void permutedChoice1(int *x, int *y);
 void permutedChoice2(int *x, int *y);
 
-void lcs(int *x); // left circular shift
+void leftCircularShift(int *x); // left circular shift
 
 int main()
 {
@@ -17,14 +17,14 @@ int main()
     for (int i = 1; i <= 16; i++){
         if (i == 1 || i == 4 || i == 9 || i == 16){
 
-            lcs(permuted1key);
+            leftCircularShift(permuted1key);
 
 
-            lcs(permuted1key);
+            leftCircularShift(permuted1key);
         }
         else{
 
-            lcs(permuted1key);
+            leftCircularShift(permuted1key);
         }
         int temp[48];
         permutedChoice2(permuted1key, temp);
@@ -41,7 +41,7 @@ int main()
     }
 }
 
-void lcs(int *x)
+void leftCircularShift(int *x)
 {
     int place = x[55];
     x[55] = 0;

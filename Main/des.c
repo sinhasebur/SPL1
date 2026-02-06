@@ -41,7 +41,7 @@ void DES_Decrypt(unsigned char* x, int * key,unsigned  char* y)
 
 
 
-void DES_Encrypt(unsigned char* x, int * y,unsigned  char* z)
+void DES_Encrypt(unsigned char *x, int *y, unsigned char *z)
 {
 
     unsigned char plainText[9];
@@ -52,24 +52,24 @@ void DES_Encrypt(unsigned char* x, int * y,unsigned  char* z)
 
     swapBits(plainText);
 
-    unsigned char l[4]={plainText[0],plainText[1],plainText[2],plainText[3]};
-    unsigned char r[4]={plainText[4],plainText[5],plainText[6],plainText[7]};
+    unsigned char l[4] = {plainText[0], plainText[1], plainText[2], plainText[3]};
+    unsigned char r[4] = {plainText[4], plainText[5], plainText[6], plainText[7]};
 
     int keys[16][48];
     getKeys(key, keys[0]);
 
-    for(int i=0;i<16;i++){
+    for (int i = 0; i < 16; i++) {
 
-        unsigned char rtemp[4],ltemp[4];
-        memcpy(rtemp,r, 4*sizeof(unsigned char));
-        memcpy(ltemp,l, 4*sizeof(unsigned char));
+        unsigned char rtemp[4], ltemp[4];
+        memcpy(rtemp, r, 4 * sizeof(unsigned char));
+        memcpy(ltemp, l, 4 * sizeof(unsigned char));
 
 
         mangler(r, keys[i]); // changes r
 
 
-        xOr(ltemp, r);// this func puts xOred value in r
-        memcpy(l,rtemp, 4*sizeof(unsigned char));
+        xOr(ltemp, r); // this func puts xOred value in r
+        memcpy(l, rtemp, 4 * sizeof(unsigned char));
     }
 
 
@@ -90,20 +90,18 @@ void DES_Encrypt(unsigned char* x, int * y,unsigned  char* z)
 
 void swapBits(unsigned char* temp)
 {
-    for(int i=0;i<4;i++){
-        swap(&temp[i],&temp[4+i]);
+    for(int i = 0; i < 4; i++){
+        swap(&temp[i], &temp[4+i]);
     }
 }
 
 
-
-
-
-
-void swap(unsigned char* a,unsigned  char* b)
+void swap(unsigned char *a, unsigned char *b)
 {
     unsigned char temp;
-    temp=*a; *a=*b; *b=temp;
+    temp = *a; 
+    *a = *b; 
+    *b = temp;
 }
 
 
@@ -197,15 +195,17 @@ void sbox(int* x, int* z)
 
     int s[8][4][16] =
     {
-        {{14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7},
-        {0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8},
-        {4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0},
-        {15, 12, 8, 2, 4, 9, 1, 7, 5, 11, 3, 14, 10, 0, 6, 13}
+        {
+            {14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7},
+            {0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8},
+            {4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0},
+            {15, 12, 8, 2, 4, 9, 1, 7, 5, 11, 3, 14, 10, 0, 6, 13}
         },
-        {{15, 1, 8, 14, 6, 11, 3, 4, 9, 7, 2, 13, 12, 0, 5, 10},
-        {3, 13, 4, 7, 15, 2, 8, 14, 12, 0, 1, 10, 6, 9, 11, 5},
-        {0, 14, 7, 11, 10, 4, 13, 1, 5, 8, 12, 6, 9, 3, 2, 15},
-        {13, 8, 10, 1, 3, 15, 4, 2, 11, 6, 7, 12, 0, 5, 14, 9}
+        {
+            {15, 1, 8, 14, 6, 11, 3, 4, 9, 7, 2, 13, 12, 0, 5, 10},
+            {3, 13, 4, 7, 15, 2, 8, 14, 12, 0, 1, 10, 6, 9, 11, 5},
+            {0, 14, 7, 11, 10, 4, 13, 1, 5, 8, 12, 6, 9, 3, 2, 15},
+            {13, 8, 10, 1, 3, 15, 4, 2, 11, 6, 7, 12, 0, 5, 14, 9}
         },
         {{10, 0, 9, 14, 6, 3, 15, 5, 1, 13, 12, 7, 11, 4, 2, 8},
         {13, 7, 0, 9, 3, 4, 6, 10, 2, 8, 5, 14, 12, 11, 15, 1},
@@ -280,12 +280,12 @@ void pbox(int *x)
 }
 
 
-void int32bitstoChar(int* x,unsigned  char* y){
-
-    int k=0;
+void int32bitstoChar(int *x, unsigned  char *y)
+{
+    int k = 0;
     for(int i=0;i<4;i++){
         int temp=0;
-        for(int j=0;j<8;j++,k++){
+        for (int j = 0;j<8;j++,k++) {
 
             if(x[k]==1)
                 temp+= (1)<<j;
@@ -294,59 +294,54 @@ void int32bitstoChar(int* x,unsigned  char* y){
     }
 }
 
-void xOr(unsigned char *x,unsigned  char* y){
-
-    for(int i=0; i<4;i++){
-        int tx=x[i], ty=y[i];
-        y[i]= tx^ty;
-    }
-
+void xOr(unsigned char *x, unsigned  char* y)
+{
+    for (int i = 0; i < 4; i++)
+        y[i] = x[i] ^ y[i];
 }
 
-
-void lcs(int *x)
+void leftCircularShift(int *x)
 {
     int place = x[55];
     x[55] = 0;
     int temp;
     for (int i = 54; i >= 0; i--){
-        temp = x[i];
-        x[i] = place;
+        temp  = x[i];
+        x[i]  = place;
         place = temp;
     }
 }
 
 void permutedChoice1(int *x, int *y)
 {
+    int p1[56] = { 
+        57, 49, 41, 33, 25, 17,  9, 63, 55, 47, 39, 31, 23, 15,
+         1, 58, 50, 42, 34, 26, 18,  7, 62, 54, 46, 38, 30, 22,
+        10,  2, 59, 51, 43, 35, 27, 14,  6, 61, 53, 45, 37, 29,
+        19, 11,  3, 60, 52, 44, 36, 21, 13,  5, 28, 20, 12, 4
+    };
 
-    int p1[56] = {57, 49, 41, 33, 25, 17, 9, 63, 55, 47, 39, 31, 23, 15,
-        1, 58, 50, 42, 34, 26, 18, 7, 62, 54, 46, 38, 30, 22,
-        10, 2, 59, 51, 43, 35, 27, 14, 6, 61, 53, 45, 37, 29,
-        19, 11, 3, 60, 52, 44, 36, 21, 13, 5, 28, 20, 12, 4};
-
-        for (int i = 0; i < 56; i++){
-            y[i] = x[p1[i-1]];
-        }
+    for (int i = 0; i < 56; i++) {
+        y[i] = x[p1[i - 1]];
+    }
 }
 
 void permutedChoice2(int *x, int *y)
 {
-
-    int temp[48];
-
     int p2[48] = {
-        14, 17, 11, 24, 1, 5,
-        3, 28, 15, 6, 21, 10,
-        23, 19, 12, 4, 26, 8,
-        16, 7, 27, 20, 13, 2,
+        14, 17, 11, 24,  1,  5,
+        3,  28, 15,  6, 21, 10,
+        23, 19, 12,  4, 26,  8,
+        16,  7, 27, 20, 13,  2,
         41, 52, 31, 37, 47, 55,
         30, 40, 51, 45, 33, 48,
         44, 49, 39, 56, 34, 53,
-        46, 42, 50, 36, 29, 32};
+        46, 42, 50, 36, 29, 32
+    };
 
-        for (int i = 0; i < 48; i++){
-            y[i] = x[p2[i - 1]];
-        }
+    for (int i = 0; i < 48; i++){
+        y[i] = x[p2[i - 1]];
+    }
 }
 
 void getKeys(int* x, int *y)
@@ -359,16 +354,16 @@ void getKeys(int* x, int *y)
     int keys[16][48];
 
     for (int i = 1; i <= 16; i++){
+        //We shift twice for perfect square indicies
         if (i == 1 || i == 4 || i == 9 || i == 16){
 
-            lcs(permuted1key);
+            leftCircularShift(permuted1key);
 
 
-            lcs(permuted1key);
+            leftCircularShift(permuted1key);
         }
-        else{
-
-            lcs(permuted1key);
+        else {
+            leftCircularShift(permuted1key);
         }
         int temp[48];
         permutedChoice2(permuted1key, temp);
@@ -376,10 +371,10 @@ void getKeys(int* x, int *y)
         memcpy(keys[i - 1], temp, 48 * sizeof(int));
     }
 
-    int k=0;
-    for (int i = 0; i < 16; i++){
-        for (int j = 0; j < 48; j++){
-            y[k]=keys[i][j];
+    int k = 0;
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 48; j++) {
+            y[k] = keys[i][j];
             k++;
         }
     }

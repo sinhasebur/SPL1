@@ -19,12 +19,11 @@ typedef struct {
 
 
 void swapEntry(middleEntry* a, middleEntry* b);
-int partition(middleEntry* a, int low, int high);
+int  partition(middleEntry* a, int low, int high);
 void quicksort(middleEntry* a, int low , int high);
-void MITM();
 
-void MITM(){
-    
+void MITM() 
+{    
     int key2[128]={1 ,1 ,0 ,0 ,0 ,0 ,1 ,0 ,1 ,0 ,1 ,1 ,1 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0, 0 ,1 ,0 ,1 ,0 ,1 ,0 ,0 ,1 ,1 ,1 ,0 ,0 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 };
 
     FILE *text  = fopen("input", "rb");
@@ -45,9 +44,9 @@ void MITM(){
     ecb_encrypt(64,key2, "input", "2des");
 
 
-    FILE *entext  = fopen("encrypted", "rb");
+    FILE *entext = fopen("encrypted", "rb");
 
-    FILE *mid1  = fopen("middle1", "rb");
+    FILE *mid1   = fopen("middle1", "rb");
 
     if(!entext){
         printf("Output file not found"); endl
@@ -56,13 +55,13 @@ void MITM(){
     
     unsigned char firstCipherBlock[8];
 
-    for(int i=0;i<8;i++){
-        char x= fgetc(entext);
-        firstCipherBlock[i]=x;
+    for(int i = 0; i < 8; i++){
+        char x = fgetc(entext);
+        firstCipherBlock[i] = x;
     }
-    int guessedKey[64]={0};
+    int guessedKey[64] = {0};
 
-    middleEntry* givesKey2=malloc(sizeof(middleEntry)*keyspace);
+    middleEntry *givesKey2 = malloc(sizeof(middleEntry) * keyspace);
 
     for(long long i=0;i<keyspace;i++){
         memset(guessedKey, 0, sizeof(guessedKey));
@@ -96,14 +95,14 @@ void MITM(){
         __uint64_t pX=0;
 
         for(int p=0;p<8;p++){
-            pX=(pX<<8) |comp[p];
+            pX = (pX<<8) | comp[p];
         }
         
         givesKey1[i].X=pX;
     }
 
-    quicksort(givesKey1,0, keyspace-1);
-    quicksort(givesKey2,0, keyspace-1);
+    quicksort(givesKey1, 0, keyspace - 1);
+    quicksort(givesKey2, 0, keyspace - 1);
 
     __uint64_t k1, k2;
     int found=0;
@@ -117,16 +116,16 @@ void MITM(){
         
         while(l<=r){
             long long mid= l +(r-l)/2;
-            if(givesKey2[mid].X==x){
+            if (givesKey2[mid].X==x) {
                 k2=givesKey2[mid].key;
                 k1=givesKey1[i].key;
                 printf(".");endl; 
 
                 int guessedKey1[64]={0};
                 int guessedKey2[64]={0};
-                for(int i=keybits-1; i>=0;i-- ){
+                for(int i=keybits-1; i >= 0; i-- ){
                     guessedKey1[i]=k1&1;
-                    k1>>=1;
+                    k1 >>= 1;
                 }
                 for(int i=keybits-1; i>=0;i-- ){
                     guessedKey2[i]=k2&1;
@@ -143,7 +142,7 @@ void MITM(){
                 else {printf("Error"); endl}
                 break;
             }
-            else if(givesKey2[mid].X>x){
+            else if (givesKey2[mid].X>x) {
                 r=mid-1;
             }
             else{
@@ -153,9 +152,6 @@ void MITM(){
         if(found==1){
             break;
         }
-    }
-
-    if(found==1){
     }
 
     ecb_decrypt(64, finalGuessedKey, "encrypted", "2des");
