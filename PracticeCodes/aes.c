@@ -1,38 +1,40 @@
 #include <stdio.h>
 #include <string.h>
 
+
 #define endl printf("\n");
 
-void encrypt(char* plainText, char*  key, int rounds);
-void substituteBytes(char* plainText);
-void shiftRows(char* plainText);
-void rightCircularShift(char* start, int shifts);
-void mixColumns(char* plainText);
-void matrixMultiply(char* matrixA, int matrixB[4][4]);
-void addRoundKey(char* plainText, char* key, int round);
-void makeColumnWise(char* plaintext);
-int s_box(char byte);
+void encrypt(unsigned char* plainText, unsigned char*  key, int rounds);
+void substituteBytes(unsigned char* plainText);
+void shiftRows(unsigned char* plainText);
+void leftCircularShift(unsigned char* start, int shifts);
+void mixColumns(unsigned char* plainText);
+void matrixMultiply(unsigned char* matrixA, int matrixB[4][4]);
+void addRoundKey(unsigned char* plainText, unsigned char* key);
+void makeColumnWise(unsigned char* plaintext);
+int s_box(unsigned char byte);
 unsigned char multiplyGF(unsigned char polynomial, int integer );
-void keyExpansion(char* key, char* expandedKey);
+void keyExpansion(unsigned char* key, unsigned char* expandedKey);
 
 
 
 int main(){
-    char plainText[16]={"123456789abcefg"};
-    makeColumnWise(plainText);
-    char key[16]={'1','2','3','4','5','6','7','8','9','x','a','b','c','e','f','g'};
-    encrypt(plainText, key, 16);
-    printf("%x\n",plainText);
-
-
+    unsigned char plainText[16]={'1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g'};
+    unsigned char key[16]={'1','2','3','4','5','6','7','8','9','x','a','b','c','d','e','f'};
+    encrypt(plainText, key, 10);
+    for(int i = 0; i < 16; i++){
+        printf("%02x ", plainText[i]);
+    }
+    printf("\n");
 }
 
 
 
-void encrypt(char* plainText, char*  key, int rounds){
+void encrypt(unsigned char* plainText, unsigned char*  key, int rounds){
     //intital permute();
-    char expandedKey[1][16];
+    unsigned char expandedKey[176];
     keyExpansion(key, expandedKey);
+    addRoundKey(plainText, expandedKey);
 
     for(int i=0;i<rounds-1;i++){
         // printf("1 %d",i); endl
@@ -45,7 +47,13 @@ void encrypt(char* plainText, char*  key, int rounds){
         mixColumns(plainText);
         
         // printf("4 %d",i); endl
-        addRoundKey(plainText, expandedKey[rounds], i);
+        addRoundKey(plainText, expandedKey+(i+1)*16);
+
+        // printf("After round %d : ", i+1); endl
+        // for(int k = 0; k < 16; k++){
+        //     printf("%02x ", plainText[k]);
+        // }
+        // printf("\n");
     }
         // printf("5"); endl
         substituteBytes( plainText);
@@ -54,47 +62,60 @@ void encrypt(char* plainText, char*  key, int rounds){
         shiftRows(plainText);
         
         // printf("7"); endl
-        addRoundKey(plainText, expandedKey[rounds-1], rounds-1);
+        addRoundKey(plainText, expandedKey+(rounds)*16);
 
 }
 
-void keyExpansion(char* key, char* expandedKey){
-    int i=0, rounds=10;
-    for(;i<rounds;i++){
-        char* currentKey[4][4];
-        for(int p=0;p<4;p++){
-            memcpy(key+(i+p)*4, currentKey[0], sizeof(char)*4);
-        }
-        rightCircularShift(currentKey,3); //equivalent of 1 leftCircularShift
-        
-        for(int p=0;p<4;p++){
-            memcpy(currentKey[p],s_box(currentKey[p]), sizeof(char)*4);
-        }
+void RightCircularShiftWord(unsigned char word[4]){
 
+    unsigned char temp;
+    temp = word[0];
+    word[0] = word[1];
+    word[1] = word[2];
+    word[2] = word[3];
+    word[3] = temp;
+}
+
+void SubWord(unsigned char word[4]){
+
+    for(int i= 0; i<4 ;i++){
+        word[i]=s_box(word[i]);
 
     }
 }
 
-void makeColumnWise(char* plainText){ 
-    // aes does a matrix where 
-    int columnWise[16]={0,  4,  8,  12,
-                        1,  5,  9,  13,
-                        2,  6,  10, 14,
-                        3,  7,  11, 15};
-    char temporary[16];
-    
-    for(int i=0;i<16;i++){
-        temporary[i]=plainText[columnWise[i]];
+void keyExpansion(unsigned char key[16], unsigned char expandedKey[176]){
+
+    int word;
+    int j;
+    unsigned char temp[4];  
+    unsigned char Rcon[11] = {0x00,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1B,0x36};    
+    memcpy(expandedKey,key, sizeof(char)*16);
+
+    for(word=4;word<44;word++){
+
+        //memcpy(temp, expandedKey+(word-1)*4, sizeof(char)*16);
+        for(j = 0 ; j < 4 ; j++){
+            temp[j] = expandedKey[ (word-1)*4+j];
+        }
+
+        if(word%4==0){
+            RightCircularShiftWord(temp);
+            SubWord(temp);
+            temp[0] = temp[0] ^ Rcon[word/4];
+        }
+
+        for(int i=0 ; i<4 ; i++){
+            expandedKey[word*4 + i] = expandedKey[(word-4)*4 + i] ^ temp[i];
+
+        }
     }
-
-    // for(int i=0;i<16;i++){
-    //     plainText[i]=temporary[i];
-    // }
-    memcpy(plainText, temporary, sizeof(char)*16);
-
 }
 
-int s_box(char x){
+
+
+
+int s_box(unsigned char x){
     int s_box[16][16] = {
         {0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76},
         {0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0},
@@ -120,39 +141,38 @@ int s_box(char x){
 }
 
 
-void substituteBytes(char* plainText){
-    
 
-    char temp[16];
-    memcpy(temp, plainText, sizeof(char)*16);
-    for(int i=0;i<16;i++){
-        unsigned char x=(unsigned char) temp[i];
-        int col= x%16; 
-        int row= x/16;
-        plainText[i]=s_box(plainText[i]);
-    }
-
-}
-
-void shiftRows(char* plainText){
-    
-    for(int i=0;i<4;i++){
-        rightCircularShift(plainText+ (i)*4, i);
+void substituteBytes(unsigned char* plainText){
+    for(int i=0; i<16; i++){
+        plainText[i] = s_box(plainText[i]);
     }
 }
 
 
-void rightCircularShift(char* start, int number){
+void shiftRows(unsigned char* plainText){
     
-    char temp[4]; memcpy(temp, start, sizeof(char)*4);
-
-    for(int i=0;i<4;i++){
-        start[i]=temp[(i+number)%4];
-    }
+    // for(int i=0;i<4;i++){
+    //     leftCircularShift(plainText+ (i)*4, i);
+    // }
+    unsigned char temp[16];
+    memcpy(temp, plainText, 16);
+    plainText[1] = temp[5];  plainText[5] = temp[9];  plainText[9] = temp[13]; plainText[13] = temp[1];
+    plainText[2] = temp[10]; plainText[6] = temp[14]; plainText[10] = temp[2];  plainText[14] = temp[6];
+    plainText[3] = temp[15]; plainText[7] = temp[3];  plainText[11] = temp[7];  plainText[15] = temp[11];
 }
 
 
-void mixColumns(char* plainText){
+// void leftCircularShift(unsigned char* start, int number){
+    
+//     unsigned char temp[4]; memcpy(temp, start, sizeof(unsigned char)*4);
+
+//     for(int i=0;i<4;i++){
+//         start[i] = temp[(i + number) % 4];
+//     }
+// }
+
+
+void mixColumns(unsigned char* plainText){
     int mix_columns_matrix[4][4] ={
         {2, 3, 1, 1},
         {1, 2, 3, 1},
@@ -165,42 +185,60 @@ void mixColumns(char* plainText){
     matrixMultiply(plainText, mix_columns_matrix);
 }
 
-void matrixMultiply(char* matrixA, int matrixB[4][4]){
+
+
+void matrixMultiply(unsigned char* matrixA, int matrixB[4][4]){
     
     int ans[4][4]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
-    char matrixA2[4][4];
+    unsigned char matrixA2[4][4];
     int w=0;
     
-    for(int i=0;i<4 && w<16;i++,w++){
-        for(int j=0;j<4 && w<16;j++,w++){
-            matrixA2[i][j]=matrixA[w];
+    for(int i=0;i<4 && w<16;i++){
+        for(int j=0;j<4 && w<16;j++){
+            matrixA2[j][i]=matrixA[w++];
         }
     }
+
+    //makeColumnWise(matrixA2);
     // printf("to 2d worked ig"); endl
 
     for(int i=0;i<4;i++){
         for(int j=0;j<4;j++){
             for(int k=0;k<4;k++){
                 // printf("Trying to multiply %c and %d ", matrixA2[i][j], matrixB[k][j]);
-                ans[i][j] ^= multiplyGF(matrixA2[i][k],matrixB[k][j]) ;  // change to multiplication in GF(2^8)
+                ans[i][j] ^= multiplyGF(matrixA2[k][j],matrixB[i][k]) ;  // change to multiplication in GF(2^8)
             }
             
         }
     }
     int k=0;
-    for(int i=0;i<4 && k<16;i++,k++){
+    for(int i=0;i<4 && k<16;i++){
         for(int j=0;j<4 && k<16;j++,k++){
-            matrixA[k]=ans[i][j];
+            matrixA[k]=ans[j][i];
         }
     }
 }
 
-unsigned char multiplyGF(unsigned char polynomial, int integer ){
+
+
+
+unsigned char multiplyGF(unsigned char polynomial, int multiplier ){
     
     long long overflowed=polynomial;
     // printf("polynomial %x", overflowed); endl
 
-    overflowed<<=integer;
+    if(multiplier==1){
+        overflowed=overflowed;
+    }
+    else if(multiplier==2){
+        overflowed<<=1;
+    }
+    else if(multiplier==3){
+        long long temp=overflowed;
+        overflowed<<=1;
+        overflowed=overflowed^temp;
+    
+    }
 
     // printf("overflowed is %x", overflowed); endl
 
@@ -211,7 +249,7 @@ unsigned char multiplyGF(unsigned char polynomial, int integer ){
 
     while(overflowed>=limit){
         int leadingbit=-1;
-        int checkLeading=overflowed;
+        long long checkLeading=overflowed;
         long long divisor=irreduciblePolynomial;
         
         while(checkLeading>0){leadingbit++; checkLeading>>=1;}
@@ -229,12 +267,9 @@ unsigned char multiplyGF(unsigned char polynomial, int integer ){
 } 
 
 
-void addRoundKey(char* plainText, char* key, int round){
+void addRoundKey(unsigned char* plainText, unsigned char* key){
     for(int i=0;i<16;i++){
         plainText[i]=plainText[i]^key[i];// addition in Finite field 
     }
 }
 
-
-
-      
