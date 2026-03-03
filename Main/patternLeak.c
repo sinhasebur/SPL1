@@ -26,7 +26,7 @@ void patternLeak()
         exit(1);
     }
 
-    unsigned char headerBMP[headerSize];
+    unsigned char headerBMP[HEADERSIZE];
 
     for(int i = 0; i < HEADERSIZE; i++){
         char x = fgetc(text);
@@ -62,7 +62,7 @@ void patternLeak()
     unsigned char x;
     for (int i = 0; i < n; i++) {
         x = fgetc(entext);
-        if(i < headerSize){
+        if(i < HEADERSIZE){
             fputc(headerBMP[i], patternLeak);
         }
         else {

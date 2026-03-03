@@ -3,6 +3,7 @@
 #include "des.h"
 #include "2des.h"
 #include "3des.h"
+#include "aes.h"
 #include <stdio.h>
 
 void encrypt(unsigned char* text, int* key, unsigned char* cipherText, char* encryptiontype)
@@ -30,6 +31,24 @@ void encrypt(unsigned char* text, int* key, unsigned char* cipherText, char* enc
             memcpy(key2, key+64, sizeof(int)*64);
             memcpy(key3, key+64, sizeof(int)*64);
             _3DES_Encrypt(text, key1,key2,key3, cipherText);
+            break;
+        }
+        case 4:{
+        
+            unsigned char AESkey[16];
+            int k=0;
+            for(int i=0;i<16;i++){
+                unsigned char u=0;
+                for(int j=0;j<8;j++){
+                    if(key[k]==1){
+                        u|=(1LL<<(7-j));
+                    }
+                    k++;
+                }
+                AESkey[i]=u;
+            }
+            
+            AESencrypt(text,cipherText, AESkey,10);
             break;
         }
 
@@ -63,6 +82,24 @@ void decrypt(unsigned char* cipherText, int* key, unsigned char* resultText,  ch
             _3DES_Decrypt(cipherText, key1,key2,key3, resultText);
             break;
         }
+        case 4:{
+            unsigned char AESkey[16];
+            int k=0;
+            for(int i=0;i<16;i++){
+                unsigned char u=0;
+                for(int j=0;j<8;j++){
+                    if(key[k]==1){
+                        u|=(1LL<<(7-j));
+                    }
+                    k++;
+                }
+                AESkey[i]=u;
+            }
+            
+            AESdecrypt(cipherText,resultText,AESkey,10);
+            break;
+        }
+
     }
 }
 

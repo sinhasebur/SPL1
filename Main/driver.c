@@ -23,7 +23,7 @@ int main(int argc , char* argv[]){
     start = clock();
 
     int mode=0; //1 is ecb, 2 is cbc, 3 is cfb, 4 is ofb 
-    int encryp=0; // 1 is des, 2 is 2des, 3 is 3des 
+    int encryp=0; // 1 is des, 2 is 2des, 3 is 3des ,4 is aes
     int task=0;
 
     if(argc==2){
@@ -54,12 +54,13 @@ int main(int argc , char* argv[]){
         if((strcmp(argv[2],"--des")==0||strcmp(argv[3],"--des")==0)&&!encryp) encryp=1;
         if((strcmp(argv[2],"--2des")==0||strcmp(argv[3],"--2des")==0)&&!encryp) encryp=2;
         if((strcmp(argv[2],"--3des")==0||strcmp(argv[3],"--3des")==0)&&!encryp) encryp=3;
-
+        if((strcmp(argv[2],"--aes")==0||strcmp(argv[3],"--aes")==0)&&!encryp) encryp=4;
         
         if(mode==0 || encryp==0 || task==0) printError();
 
         else{
             unsigned char iv[8]={'a','b','c','d','e','f','g','h'};
+            unsigned char iv2[16]={'a','b','c','d','e','f','g','h','a','b','c','d','e','f','g','h'};
             
             int key[64] = {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1};
             int key2[128]={1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0};
@@ -69,21 +70,25 @@ int main(int argc , char* argv[]){
                 if(mode==1){
                     if(encryp==1) ecb_encrypt(64,key, "input", "des");
                     else if(encryp==3) ecb_encrypt(64,key3, "input", "3des");
+                    else if(encryp==4) ecb_encrypt(128,key2, "input", "aes");
                     else ecb_encrypt(64,key2, "input", "2des");
                 }
                 else if(mode==2){
                     if(encryp==1) cbc_encrypt(64,key, "input",iv, "des");
                     else if(encryp==3) cbc_encrypt(64,key3, "input",iv, "3des");
+                    else if(encryp==4) cbc_encrypt(128,key2, "input",iv2, "aes");
                     else cbc_encrypt(64,key2, "input",iv, "2des");
                 }
                 else if(mode==3){
                     if(encryp==1) cfb_encrypt(64,key, "input",iv, "des");
                     else if(encryp==3) cfb_encrypt(64,key3, "input",iv, "3des");
+                    else if(encryp==4) cfb_encrypt(128,key2, "input",iv2, "aes");
                     else cfb_encrypt(64,key2, "input",iv, "2des");
                 }
                 else if(mode==4){
                     if(encryp==1) ofb_encrypt(64,key, "input",iv, "des");
                     else if(encryp==3) ofb_encrypt(64,key3, "input",iv, "3des");
+                    else if(encryp==4) ofb_encrypt(128,key2, "input",iv2, "aes");
                     else ofb_encrypt(64,key2, "input",iv, "2des");
                 }
             }
@@ -91,21 +96,25 @@ int main(int argc , char* argv[]){
                 if(mode==1){
                     if(encryp==1) ecb_decrypt(64,key, "encrypted", "des");
                     else if(encryp==3) ecb_decrypt(64,key3, "encrypted", "3des");
+                    else if(encryp==4) ecb_decrypt(128,key2, "input", "aes");
                     else ecb_decrypt(64,key2, "encrypted", "2des");
                 }
                 else if(mode==2){
                     if(encryp==1) cbc_decrypt(64,key, "encrypted",iv, "des");
                     else if(encryp==3) cbc_decrypt(64,key3, "encrypted",iv, "3des");
+                    else if(encryp==4) cbc_decrypt(128,key2, "input",iv2, "aes");
                     else cbc_decrypt(64,key2, "encrypted",iv, "2des");
                 }
                 else if(mode==3){
                     if(encryp==1) cfb_decrypt(64,key, "encrypted",iv, "des");
                     else if(encryp==3) cfb_decrypt(64,key3, "encrypted",iv, "3des");
+                    else if(encryp==4) cfb_decrypt(128,key2, "input",iv2, "aes");
                     else cfb_decrypt(64,key2, "encrypted",iv, "2des");
                 }
                 else if(mode==4){
                     if(encryp==1) ofb_decrypt(64,key, "encrypted",iv, "des");
                     else if(encryp==3) ofb_decrypt(64,key3, "encrypted",iv, "3des");
+                    else if(encryp==4) ofb_encrypt(128,key2, "input", iv2,"aes");
                     else ofb_decrypt(64,key2, "encrypted",iv, "2des");
                 }
             }
@@ -118,11 +127,16 @@ int main(int argc , char* argv[]){
                     else if(encryp==3){
                         ecb_encrypt(64,key3, "input", "3des");
                         ecb_decrypt(64,key3, "encrypted", "3des");
+                    }
+                    else if(encryp==4) {
+                        ecb_encrypt(128,key2, "input", "aes");
+                        ecb_decrypt(128,key2, "encrypted", "aes");
                     } 
-                    else{
+                    else {
                         ecb_encrypt(64,key2, "input", "2des");
                         ecb_decrypt(64,key2, "encrypted", "2des");
-                    } 
+                    }
+
                 }
                 else if(mode==2){
                     if(encryp==1){
@@ -132,6 +146,10 @@ int main(int argc , char* argv[]){
                     else if(encryp==3){
                       cbc_encrypt(64,key3, "input",iv, "3des");
                       cbc_decrypt(64,key3, "encrypted",iv, "3des");  
+                    }
+                    else if(encryp==4) {
+                        cbc_encrypt(128,key2, "input",iv2, "aes");
+                        cbc_decrypt(128,key2, "encrypted",iv2, "aes");
                     }
                     else{
                         cbc_encrypt(64,key2, "input",iv, "2des");
@@ -147,6 +165,10 @@ int main(int argc , char* argv[]){
                       cfb_encrypt(64,key3, "input",iv, "3des");
                       cfb_decrypt(64,key3, "encrypted",iv, "3des");  
                     }
+                    else if(encryp==4) {
+                        cfb_encrypt(128,key2, "input",iv2, "aes");
+                        cfb_decrypt(128,key2, "encrypted",iv2, "aes");
+                    }
                     else{
                         cfb_encrypt(64,key2, "input",iv, "2des");
                         cfb_decrypt(64,key2, "encrypted",iv, "2des");
@@ -160,6 +182,10 @@ int main(int argc , char* argv[]){
                     else if(encryp==3){
                       ofb_encrypt(64,key3, "input",iv, "3des");
                       ofb_decrypt(64,key3, "encrypted",iv, "3des");  
+                    }
+                    else if(encryp==4) {
+                        ofb_encrypt(128,key2, "input", iv2, "aes");
+                        ofb_decrypt(128,key2, "encrypted",iv2, "aes");
                     }
                     else{
                         ofb_encrypt(64,key2, "input",iv, "2des");
