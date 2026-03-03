@@ -15,17 +15,28 @@ void makeColumnWise(unsigned char* plaintext);
 int s_box(unsigned char byte);
 unsigned char multiplyGF(unsigned char polynomial, int integer );
 void keyExpansion(unsigned char* key, unsigned char* expandedKey);
+void decrypt(unsigned char* cipherText, unsigned char*  key, int rounds);
 
 
 
 int main(){
     unsigned char plainText[16]={'1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g'};
     unsigned char key[16]={'1','2','3','4','5','6','7','8','9','x','a','b','c','d','e','f'};
+    for(int i = 0; i < 16; i++){
+        printf("%02x ", plainText[i]);
+    }
+    endl endl
     encrypt(plainText, key, 10);
     for(int i = 0; i < 16; i++){
         printf("%02x ", plainText[i]);
     }
     printf("\n");
+    endl endl
+    decrypt(plainText, key, 10);
+    for(int i = 0; i < 16; i++){
+        printf("%02x ", plainText[i]);
+    }
+    endl
 }
 
 
@@ -37,36 +48,26 @@ void encrypt(unsigned char* plainText, unsigned char*  key, int rounds){
     addRoundKey(plainText, expandedKey);
 
     for(int i=0;i<rounds-1;i++){
-        // printf("1 %d",i); endl
+       
         substituteBytes( plainText);
 
-        // printf("2 %d",i); endl
         shiftRows(plainText);
         
-        // printf("3 %d",i); endl
         mixColumns(plainText);
         
-        // printf("4 %d",i); endl
         addRoundKey(plainText, expandedKey+(i+1)*16);
 
-        // printf("After round %d : ", i+1); endl
-        // for(int k = 0; k < 16; k++){
-        //     printf("%02x ", plainText[k]);
-        // }
-        // printf("\n");
+        
     }
-        // printf("5"); endl
         substituteBytes( plainText);
 
-        // printf("6"); endl
         shiftRows(plainText);
         
-        // printf("7"); endl
         addRoundKey(plainText, expandedKey+(rounds)*16);
 
 }
 
-void RightCircularShiftWord(unsigned char word[4]){
+void leftCircularShiftWord(unsigned char word[4]){
 
     unsigned char temp;
     temp = word[0];
@@ -76,7 +77,7 @@ void RightCircularShiftWord(unsigned char word[4]){
     word[3] = temp;
 }
 
-void SubWord(unsigned char word[4]){
+void subWord(unsigned char word[4]){
 
     for(int i= 0; i<4 ;i++){
         word[i]=s_box(word[i]);
@@ -100,8 +101,8 @@ void keyExpansion(unsigned char key[16], unsigned char expandedKey[176]){
         }
 
         if(word%4==0){
-            RightCircularShiftWord(temp);
-            SubWord(temp);
+            leftCircularShiftWord(temp);
+            subWord(temp);
             temp[0] = temp[0] ^ Rcon[word/4];
         }
 
@@ -140,11 +141,41 @@ int s_box(unsigned char x){
     return s_box[row][col];
 }
 
+int inverse_s_box(unsigned char x){
+    int inv_s_box[16][16] = {
+        {0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB},
+        {0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87, 0x34, 0x8E, 0x43, 0x44, 0xC4, 0xDE, 0xE9, 0xCB},
+        {0x54, 0x7B, 0x94, 0x32, 0xA6, 0xC2, 0x23, 0x3D, 0xEE, 0x4C, 0x95, 0x0B, 0x42, 0xFA, 0xC3, 0x4E},
+        {0x08, 0x2E, 0xA1, 0x66, 0x28, 0xD9, 0x24, 0xB2, 0x76, 0x5B, 0xA2, 0x49, 0x6D, 0x8B, 0xD1, 0x25},
+        {0x72, 0xF8, 0xF6, 0x64, 0x86, 0x68, 0x98, 0x16, 0xD4, 0xA4, 0x5C, 0xCC, 0x5D, 0x65, 0xB6, 0x92},
+        {0x6C, 0x70, 0x48, 0x50, 0xFD, 0xED, 0xB9, 0xDA, 0x5E, 0x15, 0x46, 0x57, 0xA7, 0x8D, 0x9D, 0x84},
+        {0x90, 0xD8, 0xAB, 0x00, 0x8C, 0xBC, 0xD3, 0x0A, 0xF7, 0xE4, 0x58, 0x05, 0xB8, 0xB3, 0x45, 0x06},
+        {0xD0, 0x2C, 0x1E, 0x8F, 0xCA, 0x3F, 0x0F, 0x02, 0xC1, 0xAF, 0xBD, 0x03, 0x01, 0x13, 0x8A, 0x6B},
+        {0x3A, 0x91, 0x11, 0x41, 0x4F, 0x67, 0xDC, 0xEA, 0x97, 0xF2, 0xCF, 0xCE, 0xF0, 0xB4, 0xE6, 0x73},
+        {0x96, 0xAC, 0x74, 0x22, 0xE7, 0xAD, 0x35, 0x85, 0xE2, 0xF9, 0x37, 0xE8, 0x1C, 0x75, 0xDF, 0x6E},
+        {0x47, 0xF1, 0x1A, 0x71, 0x1D, 0x29, 0xC5, 0x89, 0x6F, 0xB7, 0x62, 0x0E, 0xAA, 0x18, 0xBE, 0x1B},
+        {0xFC, 0x56, 0x3E, 0x4B, 0xC6, 0xD2, 0x79, 0x20, 0x9A, 0xDB, 0xC0, 0xFE, 0x78, 0xCD, 0x5A, 0xF4},
+        {0x1F, 0xDD, 0xA8, 0x33, 0x88, 0x07, 0xC7, 0x31, 0xB1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xEC, 0x5F},
+        {0x60, 0x51, 0x7F, 0xA9, 0x19, 0xB5, 0x4A, 0x0D, 0x2D, 0xe5, 0x7A, 0x9F, 0x93, 0xC9, 0x9C, 0xEF},
+        {0xA0, 0xE0, 0x3B, 0x4D, 0xAE, 0x2A, 0xF5, 0xB0, 0xC8, 0xEB, 0xBB, 0x3C, 0x83, 0x53, 0x99, 0x61},
+        {0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D}
+    };
+
+    int row=x/16;
+    int col=x%16;
+    return inv_s_box[row][col];
+}
 
 
 void substituteBytes(unsigned char* plainText){
     for(int i=0; i<16; i++){
         plainText[i] = s_box(plainText[i]);
+    }
+}
+
+void inverseSubstituteBytes(unsigned char* cipherText){
+    for(int i=0; i<16; i++){
+        cipherText[i] = inverse_s_box(cipherText[i]);
     }
 }
 
@@ -156,9 +187,15 @@ void shiftRows(unsigned char* plainText){
     // }
     unsigned char temp[16];
     memcpy(temp, plainText, 16);
-    plainText[1] = temp[5];  plainText[5] = temp[9];  plainText[9] = temp[13]; plainText[13] = temp[1];
-    plainText[2] = temp[10]; plainText[6] = temp[14]; plainText[10] = temp[2];  plainText[14] = temp[6];
-    plainText[3] = temp[15]; plainText[7] = temp[3];  plainText[11] = temp[7];  plainText[15] = temp[11];
+    int shiftMap[16] = {
+        0,  5, 10, 15,  
+        4,  9, 14,  3,  
+        8, 13,  2,  7,
+        12,  1,  6, 11 
+    };
+    for(int i=0;i<16;i++){
+        plainText[i]=temp[shiftMap[i]];
+    }
 }
 
 
@@ -185,6 +222,18 @@ void mixColumns(unsigned char* plainText){
     matrixMultiply(plainText, mix_columns_matrix);
 }
 
+void inverseMixColumns(unsigned char* cipherText){
+    
+    int inv_mix_columns_matrix[4][4] = {
+        {14, 11, 13,  9},
+        { 9, 14, 11, 13},
+        {13,  9, 14, 11},
+        {11, 13,  9, 14}
+    };
+    
+    
+    matrixMultiply(cipherText, inv_mix_columns_matrix);
+}
 
 
 void matrixMultiply(unsigned char* matrixA, int matrixB[4][4]){
@@ -239,7 +288,37 @@ unsigned char multiplyGF(unsigned char polynomial, int multiplier ){
         overflowed=overflowed^temp;
     
     }
-
+    else if(multiplier==9){ //1001
+        long long temp=overflowed;
+        overflowed<<=3;
+        overflowed=overflowed^temp;
+    }
+    else if(multiplier==11){ //1011
+        long long temp=overflowed;
+        overflowed<<=3;
+        long long temp2=temp;
+        temp2<<=1;
+        overflowed=overflowed^temp2;
+        overflowed=overflowed^temp;
+    } 
+    else if(multiplier==13){ //1101
+        long long temp=overflowed;
+        overflowed<<=3;
+        long long temp2=temp;
+        temp2<<=2;
+        overflowed=overflowed^temp2;
+        overflowed=overflowed^temp;
+    }
+    else if(multiplier==14){ //1110
+        long long temp=overflowed;
+        overflowed<<=3;
+        long long temp2=temp;
+        temp2<<=2;
+        overflowed=overflowed^temp2;
+        temp<<=1;
+        overflowed=overflowed^temp;
+    }
+        
     // printf("overflowed is %x", overflowed); endl
 
     //divide by x^8 + x^4 + x^3 + x + 1
@@ -273,3 +352,42 @@ void addRoundKey(unsigned char* plainText, unsigned char* key){
     }
 }
 
+
+void inverseShiftRows(unsigned char* cipherText) {
+    unsigned char temp[16];
+    memcpy(temp, cipherText, 16);
+
+    int modifiedISRMatrix[16]={
+        0, 13, 10,  7, 
+        4,  1, 14, 11,  
+        8,  5,  2, 15,
+        12,  9,  6,  3
+    };
+
+    for (int i = 0; i < 16; i++) {
+        cipherText[i] = temp[modifiedISRMatrix[i]];
+    }
+
+}
+
+void decrypt(unsigned char* cipherText, unsigned char*  key, int rounds){
+    int endofKey=176-16;
+    unsigned char expandedKey[176];
+    keyExpansion(key, expandedKey);
+    addRoundKey(cipherText, expandedKey+endofKey);
+
+    for(int i=0;i<rounds-1;i++){
+        
+        inverseShiftRows(cipherText);
+        inverseSubstituteBytes( cipherText);
+        addRoundKey(cipherText, expandedKey + endofKey-(i+1)*16);
+        inverseMixColumns(cipherText);
+        
+    }
+        inverseShiftRows(cipherText);
+        inverseSubstituteBytes( cipherText);
+        
+        
+        addRoundKey(cipherText, expandedKey);
+
+}
