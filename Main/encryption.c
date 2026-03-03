@@ -29,7 +29,7 @@ void encrypt(unsigned char* text, int* key, unsigned char* cipherText, char* enc
             int key1[64],key2[64],key3[64];
             memcpy(key1, key, sizeof(int)*64);
             memcpy(key2, key+64, sizeof(int)*64);
-            memcpy(key3, key+64, sizeof(int)*64);
+            memcpy(key3, key+128, sizeof(int)*64);
             _3DES_Encrypt(text, key1,key2,key3, cipherText);
             break;
         }
@@ -78,7 +78,7 @@ void decrypt(unsigned char* cipherText, int* key, unsigned char* resultText,  ch
             int key1[64],key2[64],key3[64];
             memcpy(key1, key, sizeof(int)*64);
             memcpy(key2, key+64, sizeof(int)*64);
-            memcpy(key3, key+64, sizeof(int)*64);
+            memcpy(key3, key+128, sizeof(int)*64);
             _3DES_Decrypt(cipherText, key1,key2,key3, resultText);
             break;
         }
