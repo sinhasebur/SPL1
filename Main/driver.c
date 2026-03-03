@@ -102,19 +102,19 @@ int main(int argc , char* argv[]){
                 else if(mode==2){
                     if(encryp==1) cbc_decrypt(64,key, "encrypted",iv, "des");
                     else if(encryp==3) cbc_decrypt(64,key3, "encrypted",iv, "3des");
-                    else if(encryp==4) cbc_decrypt(128,key2, "input",iv2, "aes");
+                    else if(encryp==4) cbc_decrypt(128,key2, "encrypted",iv2, "aes");
                     else cbc_decrypt(64,key2, "encrypted",iv, "2des");
                 }
                 else if(mode==3){
                     if(encryp==1) cfb_decrypt(64,key, "encrypted",iv, "des");
                     else if(encryp==3) cfb_decrypt(64,key3, "encrypted",iv, "3des");
-                    else if(encryp==4) cfb_decrypt(128,key2, "input",iv2, "aes");
+                    else if(encryp==4) cfb_decrypt(128,key2, "encrypted",iv2, "aes");
                     else cfb_decrypt(64,key2, "encrypted",iv, "2des");
                 }
                 else if(mode==4){
                     if(encryp==1) ofb_decrypt(64,key, "encrypted",iv, "des");
                     else if(encryp==3) ofb_decrypt(64,key3, "encrypted",iv, "3des");
-                    else if(encryp==4) ofb_encrypt(128,key2, "input", iv2,"aes");
+                    else if(encryp==4) ofb_encrypt(128,key2, "encrypted", iv2,"aes");
                     else ofb_decrypt(64,key2, "encrypted",iv, "2des");
                 }
             }

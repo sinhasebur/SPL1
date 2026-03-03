@@ -53,6 +53,11 @@ void pkcs7_remove_Pad(int blockSize,FILE* decrypted,unsigned char** outstream , 
 {
     int padded= (*outstream)[size];
 
+    if (padded <= 0||padded > (blockSize / 8)) {
+        padded = 0;
+        printf("Padding error\n");
+    }
+
     for(int i=0; i<size-padded; i++){
         fputc((*outstream)[i],decrypted);
     }
@@ -168,7 +173,7 @@ void ecb_decrypt(int blockSize, int* key, char* file ,char* encryptionType )
 void cbc_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType)
 {
     int bytes=blockSize/8;
-
+    
     FILE *text  = fopen(filename, "rb");
 
     if(!text){
@@ -256,6 +261,8 @@ void cbc_decrypt( int blockSize, int* key, char* file,  unsigned char* iv, char*
     unsigned char* previous=malloc(sizeof(unsigned char) * bytes);
 
     for(int i=0;i<blockNum;i++){
+        unsigned char currentCipherBlock[16]; 
+        memcpy(currentCipherBlock, textstream + i*bytes, bytes);
         
         decrypt(textstream+ i*bytes,key,out + i*bytes, encryptionType);
         if(i==0){
@@ -265,7 +272,7 @@ void cbc_decrypt( int blockSize, int* key, char* file,  unsigned char* iv, char*
             Xor(out+ i*bytes,previous,bytes);
         }
         
-        memcpy(previous,textstream + i*bytes, sizeof(unsigned char)*bytes);
+        memcpy(previous,currentCipherBlock, sizeof(unsigned char)*bytes);
     }
 
     FILE *deciphered  = fopen("decrypted", "wb");
@@ -305,8 +312,6 @@ void cfb_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
     memcpy(output, iv, sizeof(unsigned char)*bytes);
 
     FILE *encrypted  = fopen("encrypted", "wb");
-
-    
 
     encrypt(output, key,outText,encryptionType);
     
@@ -377,8 +382,15 @@ void cfb_decrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
 
 
 
-void ofb_encrypt( int blockSize, int* key, char* filename,  unsigned char* nonce, char* encryptionType)
-{
+void ofb_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType)
+{   
+    unsigned char nonce[16];
+    if(blockSize==64){
+        memcpy(nonce, iv, sizeof(char)*8);
+    }
+    else{
+        memcpy(nonce, iv, sizeof(char)*16);
+    }
     int bytes=blockSize/8;
 
     FILE *text  = fopen(filename, "rb");

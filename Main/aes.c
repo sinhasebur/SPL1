@@ -3,8 +3,6 @@
 
 void AESencrypt(unsigned char* plainText, unsigned char* cipherText, unsigned char*  key, int rounds){
 
-
-
     unsigned char expandedKey[176];
     keyExpansion(key, expandedKey);
     addRoundKey(plainText, expandedKey);
