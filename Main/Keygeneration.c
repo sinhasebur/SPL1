@@ -75,6 +75,7 @@ void toCharArray(int size, int* x, unsigned  char* y){
 
 
 int random01(){
+    //from https://en.wikipedia.org/wiki/Xorshift 
     __uint64_t x = random_state;
     x ^= x << 13;
     x ^= x >> 17;

@@ -17,6 +17,9 @@ void cfb_decrypt( int blockSize, int* key, char* filename, unsigned char* iv, ch
 void ofb_encrypt(  int blockSize, int* key,char* filename, unsigned char* iv, char* encryption);
 void ofb_decrypt( int blockSize, int* key, char* filename, unsigned char* iv, char* encryption);
 
+void counter_decrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType);
+void counter_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType);
+
 int pkcs7_Pad(int blockSize,FILE* filename, unsigned char ** textstream ); // returns blocks needed
 void pkcs7_remove_Pad(int blockSize,FILE* decrypted,unsigned char** outstream , int filesize);
 

@@ -50,11 +50,16 @@ int main(int argc , char* argv[]){
         if((strcmp(argv[2],"--cbc")==0||strcmp(argv[3],"--cbc")==0)&&!mode) mode=2;
         if((strcmp(argv[2],"--cfb")==0||strcmp(argv[3],"--cfb")==0)&&!mode) mode=3;
         if((strcmp(argv[2],"--ofb")==0||strcmp(argv[3],"--ofb")==0)&&!mode) mode=4;
+        if((strcmp(argv[2],"--counter")==0||strcmp(argv[3],"--counter")==0)&&!mode) mode=5;
+
+        
         
         if((strcmp(argv[2],"--des")==0||strcmp(argv[3],"--des")==0)&&!encryp) encryp=1;
         if((strcmp(argv[2],"--2des")==0||strcmp(argv[3],"--2des")==0)&&!encryp) encryp=2;
         if((strcmp(argv[2],"--3des")==0||strcmp(argv[3],"--3des")==0)&&!encryp) encryp=3;
         if((strcmp(argv[2],"--aes")==0||strcmp(argv[3],"--aes")==0)&&!encryp) encryp=4;
+
+        
         
         if(mode==0 || encryp==0 || task==0) printError();
 
@@ -190,6 +195,24 @@ int main(int argc , char* argv[]){
                     else{
                         ofb_encrypt(64,key2, "input",iv, "2des");
                         ofb_decrypt(64,key2, "encrypted",iv, "2des");
+                    } 
+                }
+                else if(mode==5){
+                    if(encryp==1){
+                        counter_encrypt(64,key, "input",iv, "des");
+                        counter_decrypt(64,key, "encrypted",iv, "des");
+                    }
+                    else if(encryp==3){
+                      counter_encrypt(64,key3, "input",iv, "3des");
+                      counter_decrypt(64,key3, "encrypted",iv, "3des");  
+                    }
+                    else if(encryp==4) {
+                        counter_encrypt(128,key2, "input", iv2, "aes");
+                        counter_decrypt(128,key2, "encrypted",iv2, "aes");
+                    }
+                    else{
+                        counter_encrypt(64,key2, "input",iv, "2des");
+                        counter_decrypt(64,key2, "encrypted",iv, "2des");
                     } 
                 }
             }

@@ -5,6 +5,8 @@
 #include "3des.h"
 #include "aes.h"
 #include <stdio.h>
+#include <stdlib.h>
+
 
 void encrypt(unsigned char* text, int* key, unsigned char* cipherText, char* encryptiontype)
 {
@@ -113,7 +115,8 @@ int getType( char* x){
     else if(x[0]=='3') return 3;
     else if (x[0]=='a'||x[0]=='A') return 4;
     else {
-        printf("INVALID ENCRYPTION TYPE \nDefaulting to DES\n");
-        return 1;
+        printf("INVALID ENCRYPTION TYPE \n\n");
+        exit(1);
+        //return 0;
     }
 }

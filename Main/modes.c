@@ -6,6 +6,9 @@
 
 #define endl printf("\n");
 
+
+void counter_encryptWithOutputName( int blockSize, int* key, char* infilename, char* outfilename,  unsigned char* iv, char* encryptionType);
+
 int pkcs7_Pad(int blockSize,FILE* text , unsigned char** textstream)
 {
     int bytes=blockSize/8;
@@ -513,6 +516,89 @@ void ofb_decrypt( int blockSize, int* key, char* filename,  unsigned char* nonce
 }
 
 
+void counter_encrypt(int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType){
+    counter_encryptWithOutputName(blockSize, key,filename, "encrypted", iv, encryptionType);
+}
+
+void counter_encryptWithOutputName( int blockSize, int* key, char* infilename, char* outfilename,  unsigned char* iv, char* encryptionType)
+{   
+    unsigned char nonce[16];
+    if(blockSize==64){
+        memcpy(nonce, iv, sizeof(char)*8);
+    }
+    else{
+        memcpy(nonce, iv, sizeof(char)*16);
+    }
+    int bytes=blockSize/8;
+
+    FILE *text  = fopen(infilename, "rb");
+
+    if(!text){
+        printf("Input file %s not found", infilename); endl
+        return;
+    }
+
+    unsigned char keystream [bytes];
+    unsigned char plainText [bytes];
+    long long counter=0;
+
+    for(int i=0;i<bytes;i++) plainText[i]=0;
+    encrypt(nonce,key, keystream, encryptionType);
+    
+    unsigned char count[bytes];
+
+    FILE *encrypted  = fopen(outfilename, "wb");
+
+    int i,k=0;
+    int loop=1;
+
+    while(loop){
+        k=0;
+      
+        while( k<bytes){
+            if((i=fgetc(text))!=EOF){
+                count[k]=i;
+            }
+            else {loop=0; break;}
+            k++;
+        }  
+
+        for(int i=0;i<k;i++){
+            plainText[i]=count[i];
+        }
+
+        unsigned char tempIV [bytes];
+        unsigned char toXor [bytes];
+        memcpy(tempIV,nonce,bytes);
+        
+        for (int j=0;j<8;j++) {
+            tempIV[bytes-1-j] ^=(unsigned char) ((counter>>(j*8))&0xFF);
+        }
+        
+        encrypt(tempIV, key, toXor, encryptionType);
+        
+        Xor(plainText, toXor,k);
+            
+        
+        counter++;
+        
+        
+        for(int i=0;i<k;i++){
+            fputc(plainText[i],encrypted);
+        }
+    
+    }
+         
+    fclose(text);
+    fclose(encrypted);
+   
+}
+
+void counter_decrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType)
+{   
+    counter_encryptWithOutputName(blockSize, key,filename, "decrypted", iv, encryptionType);
+   
+}
 
 
 void Xor(unsigned char *output, unsigned char* other, int n){
