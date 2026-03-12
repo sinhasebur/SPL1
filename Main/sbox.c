@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 unsigned char multiplyGF(unsigned char a, unsigned char b);
 int getInverseGF(unsigned char byte);

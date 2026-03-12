@@ -3,11 +3,13 @@
 #include "modes.h"
 #include "encryption.h"
 #include <stdlib.h>
+#include <stdint.h>
 
 #define endl printf("\n");
 
 
 void counter_encryptWithOutputName( int blockSize, int* key, char* infilename, char* outfilename,  unsigned char* iv, char* encryptionType);
+
 
 int pkcs7_Pad(int blockSize,FILE* text , unsigned char** textstream)
 {
@@ -34,11 +36,9 @@ int pkcs7_Pad(int blockSize,FILE* text , unsigned char** textstream)
         else (*textstream)[i]=x;
     }
 
-    int k=excess;
-
     for(int i=0;i<bytes;i++){
 
-        if(i<k){
+        if(i<excess){
             x=fgetc(text);
             (*textstream)[blockNum*bytes+i]=x;
         }
@@ -56,8 +56,10 @@ void pkcs7_remove_Pad(int blockSize,FILE* decrypted,unsigned char** outstream , 
 {
     int padded= (*outstream)[size];
 
-    if (padded <= 0||padded > (blockSize / 8)) {
-        padded = 0;
+    int bytes=blockSize/8;
+
+    if (padded <= 0 || padded >bytes ) {
+        padded= 0;
         printf("Padding error\n");
     }
 
@@ -65,8 +67,6 @@ void pkcs7_remove_Pad(int blockSize,FILE* decrypted,unsigned char** outstream , 
         fputc((*outstream)[i],decrypted);
     }
 }
-
-
 
 
 
@@ -88,7 +88,6 @@ void ecb_encrypt(int blockSize,  int* key, char* filename, char* encryptionType)
     long long blockNum= pkcs7_Pad( blockSize, text , &textstream);
 
     long long allocate= (blockNum*bytes);
-
 
 
     unsigned char* cipherTextStream= malloc(sizeof(unsigned char) * allocate);
@@ -430,13 +429,7 @@ void ofb_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
             select[i]=count[i];
         }
 
-        if(bytes==k){
-            Xor(select, enc_part,bytes);
-        }
-        else{
-            Xor(select, enc_part,k);
-        }
-        
+        Xor(select, enc_part,k);
 
         unsigned char temp [bytes];
         encrypt(enc_part, key, temp, encryptionType);
@@ -492,12 +485,7 @@ void ofb_decrypt( int blockSize, int* key, char* filename,  unsigned char* nonce
             select[i]=count[i];
         }
 
-        if(bytes==k){
-            Xor(select, enc_part,bytes);
-        }
-        else{
-            Xor(select, enc_part,k);
-        }
+        Xor(select, enc_part,k);
         
 
         unsigned char temp [bytes];
@@ -609,5 +597,4 @@ void Xor(unsigned char *output, unsigned char* other, int n){
     }
 
 }
-
 

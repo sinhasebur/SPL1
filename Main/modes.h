@@ -23,4 +23,7 @@ void counter_encrypt( int blockSize, int* key, char* filename,  unsigned char* i
 int pkcs7_Pad(int blockSize,FILE* filename, unsigned char ** textstream ); // returns blocks needed
 void pkcs7_remove_Pad(int blockSize,FILE* decrypted,unsigned char** outstream , int filesize);
 
+
+void counter_encryptWithOutputName( int blockSize, int* key, char* infilename, char* outfilename,  unsigned char* iv, char* encryptionType);
+
 #endif
