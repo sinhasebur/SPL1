@@ -197,28 +197,118 @@ __uint128_t bytesTo128(unsigned char* bytes){
 
 
 
+void gcm_decrypt(int* intKey, unsigned char* ciphertext, int length, unsigned char* iv, unsigned char ivLength, unsigned char* outCipher, unsigned char* outTag){
+
+    unsigned char key[16] ={0};
+
+    for(int i=0; i<16; i++) {
+        for(int j=0; j<8; j++) {
+            if(intKey[i*8+j]) key[i] |=(1<<(7-j));
+        }
+    }
+
+    // H= E(K, 0^128 )
+    unsigned char h[16], zero[16]={0};
+
+    AESencrypt(zero, h, key, 10);
+    __uint128_t H = bytesTo128(h);
+
+    unsigned char y0[16]={0};
+    if(ivLength==12){
+        for(int i=0;i<12;i++){
+            y0[i]=iv[i];
+        }
+        y0[12]=0; y0[13]=0; y0[14]=0; y0[15]=1;
+    }
+    else{
+        printf("unsupported iv length"); endl
+    }
+    
+    __uint128_t Y0 = bytesTo128(y0);
+
+    
+    __uint128_t Yi=incr(Y0);
+    
+    unsigned char e[16];
+    unsigned char y0_for_encrypt[16]; 
+    memcpy(y0_for_encrypt, y0, 16); 
+    AESencrypt(y0_for_encrypt, e, key, 10);
+    __uint128_t E_Y0 = bytesTo128(e);  //store for E(K, Y0)
+
+    __uint128_t ghash=0;
+    
+    int numBlocks=(length+15)/16;
+
+        
+
+    for (int i = 0; i<numBlocks; i++) {
+        unsigned char K[16], yBytes[16], block[16]={0};
+        int offset = i*16;
+        int blockLength;
+        
+        if(length-offset>16){
+            blockLength=16;
+        }
+        else{
+            blockLength=length-offset;
+        }
+
+        //Xi=(Xi−1 ⊕ Ci) · H
+        unsigned char Ci[16]={0};
+        memcpy(Ci, ciphertext+offset, blockLength);
+        ghash =ghash^bytesTo128(Ci);
+        ghash =GFmultiply(ghash, H);
+
+        uint128ToBytes(Yi, yBytes);
+        AESencrypt(yBytes,K, (unsigned char*)key, 10);
+
+        //Ci = Pi ⊕ E(K, Yi) for i = 1, . . . , n − 1
+        //when length is not 16, Cn* = Pn* ⊕ MSBu(E(K, Yn))
+
+        for (int j=0; j<blockLength; j++) {
+            outCipher[offset+j]= ciphertext[offset + j] ^ K[j];
+        }
+
+        Yi =incr(Yi);
+    }
+
+    //Xi = (Xn ⊕(len(C))) · 
+    __uint128_t lenC = (__uint128_t)(length*8); 
+    ghash= ghash ^ lenC;
+    ghash= GFmultiply(ghash, H);
+
+    //T = GHASH ^ E(K, Y0)
+    __uint128_t Tag = ghash ^ E_Y0;
+    uint128ToBytes(Tag, outTag);
+
+} 
+
+
+
+
 
 //Page 7
 // The function incr(), which treats the rightmost 32
 // bits of its argument as a nonnegative integer with the least significant bit on the right, and increments this value modulo 232. 
 // More formally, the value of incr(FiI) is Fi(I + 1 mod 2^32).
+
+
 __uint128_t incr(__uint128_t Yi){
-    __uint128_t F=0, I=0;
-    for(int i=127;i>=32;i--){
-        F= F+ ((__uint128_t)1<<i);
-    }
-    for(int i=31;i>=0;i--){
-        I= I+(__uint128_t)1<<i;
-    }
-    __uint128_t Yf=Yi&F;
-    __uint128_t YI=Yi&I;
+    
+    __uint128_t increment=0xFFFFFFFF, fixed= ~increment;
+
+    __uint128_t Yf=Yi&fixed;
+    __uint128_t YI=Yi&increment;
 
     YI++;
-    YI=YI&I;
+    YI=YI&increment;
     return Yf | YI;
 }
 
 
+
+
+/////------------------------------------------------remove after header added-------------------------------------------------
 
 
 
@@ -578,32 +668,133 @@ void AESdecrypt(unsigned char* cipherText,unsigned char* resultText, unsigned ch
 
 
 
+
+//------- covered by headers-----
+
+
+
+// only for testcases
+
+void hextoBytes(const char* hex, unsigned char* bytes) {
+    for (int i=0, k=0; i<strlen(hex); i+=2,k++) { 
+        unsigned char char1=0,char2=0;
+        char1= hex[i];
+        if(i+1<strlen(hex))
+            char2= hex[i+1];
+        
+        int value1=0,value2=0;
+        if(char1>='0' && char1<='9'){
+            value1=char1-'0';
+        }
+        else{
+            value1=10+(char1-'a');
+        }
+
+        if(char2>='0' && char2<='9'){
+            value2=char2-'0';
+        }
+        else{
+            value2=10+(char2-'a');
+        }
+
+        bytes[k]=value1*16+value2;
+    }
+}
+
+void hextoBits(char* hex,int* bits) {
+
+    for (int i=0; i<32; i++) { 
+        unsigned char byte;
+        byte= hex[i];
+        int value;
+
+        if(byte>='0' && byte<='9'){
+            value=byte-'0';
+        }
+        else{
+            value=10+(byte-'a');
+        }
+
+        for(int j=0;j<4;j++){
+            bits[4*i+j]= (value >> (3-j))&1;
+        }
+    }
+}
+
+
 int main() {
     //testcase 2
-    int key[128] ={0}; 
-    unsigned char plaintext[16] = {0};
-    unsigned char iv[12] = {0}; 
     
-    unsigned char cipherText[16];
+    //printf("Testcase 2"); endl
+    // int key[128] ={0}; 
+    // unsigned char plaintext[16] = {0};
+    // unsigned char iv[12] = {0}; 
+    
+    // unsigned char cipherText[16];
+    // unsigned char tag[16];
+
+    // gcm_encrypt(key, plaintext, 16, iv,12, cipherText, tag);
+
+    // printf("Ciphertext is ");
+    
+    // for(int i=0; i<16; i++) {
+    //     printf("%02x", cipherText[i]);
+    // }
+    // printf("\nExpected is 0388dace60b6a392f328c2b971b2fe78\n\n");
+
+    // printf("Tag is   ");
+    // for(int i=0; i<16; i++){
+    //     printf("%02x", tag[i]);
+    // } 
+    // printf("\nExpected tag is ab6e47d42cec13bdf53a67b21257bddf\n");
+
+
+    
+
+// page 28 test 3
+
+
+    printf("                          TESTCASE #3         "     ); endl
+
+    char* hexKey= "feffe9928665731c6d6a8f9467308308";
+    char* hexIV ="cafebabefacedbaddecaf888";
+    char* hexPT ="d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b391aafd255";
+
+    int key[128];
+    unsigned char iv[12];
+    unsigned char plaintext[64]; 
+    
+    hextoBits(hexKey, key);
+    hextoBytes(hexIV, iv);
+    hextoBytes(hexPT, plaintext);
+
+    unsigned char ciphertext[64];
     unsigned char tag[16];
 
-    gcm_encrypt(key, plaintext, 16, iv,12, cipherText, tag);
-
-    printf("Ciphertext is ");
-    
-    for(int i=0; i<16; i++) {
-        printf("%02x", cipherText[i]);
-    }
+    endl 
+    gcm_encrypt(key, plaintext, 64, iv, 12, ciphertext, tag); 
     endl
 
-    printf("\nExpected is 0388dace60b6a392f328c2b971b2fe78\n\n");
-
-    printf("Tag is   ");
-    for(int i=0; i<16; i++){
-        printf("%02x", tag[i]);
-    } 
+    printf("Ciphertext: ");
+    for(int i=0; i<64; i++)
+        printf("%02x", ciphertext[i]);
     endl
-    printf("\nExpected tag is ab6e47d42cec13bdf53a67b21257bddf\n");
-    return 0;
+
+    printf("Tag: ");
+    for(int i=0; i<16; i++) printf("%02x", tag[i]);
+    printf("\n");
+
+    unsigned char out[64];
+    unsigned char tag2[16];
+
+    gcm_decrypt(key, ciphertext, 64, iv, 12, out, tag2);
+
+    printf("plaintext decrypted: " ); 
+    for(int i=0; i<64; i++) printf("%02x", out[i]);
+    endl
+
+    printf("decryption Tag: ");
+    for(int i=0; i<16; i++) printf("%02x", tag2[i]);
+    endl
 }
 
