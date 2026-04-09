@@ -8,7 +8,6 @@
 #define endl printf("\n");
 
 
-void counter_encryptWithOutputName( int blockSize, int* key, char* infilename, char* outfilename,  unsigned char* iv, char* encryptionType);
 
 
 int pkcs7_Pad(int blockSize,FILE* text , unsigned char** textstream)
@@ -71,15 +70,15 @@ void pkcs7_remove_Pad(int blockSize,FILE* decrypted,unsigned char** outstream , 
 
 
 
-void ecb_encrypt(int blockSize,  int* key, char* filename, char* encryptionType)
+void ecb_encrypt(int blockSize,  int* key, char* infilename, char* outfilename, char* encryptionType)
 {
 
     int bytes=blockSize/8;
 
-    FILE *text  = fopen(filename, "rb");
+    FILE *text  = fopen(infilename, "rb");
 
     if(!text){
-        printf("Input file %s not found", filename); endl
+        printf("Input file %s not found", infilename); endl
         return;
     }
 
@@ -96,7 +95,7 @@ void ecb_encrypt(int blockSize,  int* key, char* filename, char* encryptionType)
     }
 
 
-    FILE *cipher  = fopen("encrypted", "wb");
+    FILE *cipher  = fopen(outfilename, "wb");
 
     for(int i=0; i<allocate ; i++){
         fputc(cipherTextStream[i],cipher);
@@ -110,13 +109,13 @@ void ecb_encrypt(int blockSize,  int* key, char* filename, char* encryptionType)
 }
 
 
-void ecb_decrypt(int blockSize, int* key, char* file ,char* encryptionType )
+void ecb_decrypt(int blockSize, int* key, char* infilename , char* outfilename ,char* encryptionType )
 {
     int bytes=blockSize/8;
-    FILE *text  = fopen(file, "rb");
+    FILE *text  = fopen(infilename, "rb");
 
     if(!text){
-        printf("File to decrypt %s not found", file); endl
+        printf("File to decrypt %s not found", infilename); endl
         return;
     }
 
@@ -155,7 +154,7 @@ void ecb_decrypt(int blockSize, int* key, char* file ,char* encryptionType )
         decrypt(textstream+ i*bytes,key,out+ i*bytes, encryptionType);
     }
 
-    FILE *deciphered  = fopen("decrypted", "wb");
+    FILE *deciphered  = fopen(outfilename, "wb");
 
     pkcs7_remove_Pad(blockSize, deciphered , &out, n-1);
 
@@ -172,14 +171,14 @@ void ecb_decrypt(int blockSize, int* key, char* file ,char* encryptionType )
 
 
 
-void cbc_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType)
+void cbc_encrypt( int blockSize, int* key, char* infilename,char* outfilename,  unsigned char* iv, char* encryptionType)
 {
     int bytes=blockSize/8;
     
-    FILE *text  = fopen(filename, "rb");
+    FILE *text  = fopen(infilename, "rb");
 
     if(!text){
-        printf("Input file %s not found", filename); endl
+        printf("Input file %s not found", infilename); endl
         return;
     }
 
@@ -205,7 +204,7 @@ void cbc_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
     }
 
 
-    FILE *cipher  = fopen("encrypted", "wb");
+    FILE *cipher  = fopen(outfilename, "wb");
 
     for(int i=0; i<allocate ; i++){
         fputc(cipherTextStream[i],cipher);
@@ -220,13 +219,13 @@ void cbc_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
 
 
 
-void cbc_decrypt( int blockSize, int* key, char* file,  unsigned char* iv, char* encryptionType)
+void cbc_decrypt( int blockSize, int* key, char* infilename,char* outfilename,  unsigned char* iv, char* encryptionType)
 {
     int bytes=blockSize/8;
-    FILE *text  = fopen(file, "rb");
+    FILE *text  = fopen(infilename, "rb");
 
     if(!text){
-        printf("File to decrypt %s not found", file); endl
+        printf("File to decrypt %s not found", infilename); endl
         return;
     }
 
@@ -277,7 +276,7 @@ void cbc_decrypt( int blockSize, int* key, char* file,  unsigned char* iv, char*
         memcpy(previous,currentCipherBlock, sizeof(unsigned char)*bytes);
     }
 
-    FILE *deciphered  = fopen("decrypted", "wb");
+    FILE *deciphered  = fopen(outfilename, "wb");
 
     pkcs7_remove_Pad(blockSize, deciphered , &out, n-1);
 
@@ -297,14 +296,14 @@ void cbc_decrypt( int blockSize, int* key, char* file,  unsigned char* iv, char*
 
 
 
-void cfb_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType)
+void cfb_encrypt( int blockSize, int* key, char* infilename,char* outfilename,  unsigned char* iv, char* encryptionType)
 {
     int bytes=blockSize/8;
 
-    FILE *text  = fopen(filename, "rb");
+    FILE *text  = fopen(infilename, "rb");
 
     if(!text){
-        printf("Input file %s not found", filename); endl
+        printf("Input file %s not found", infilename); endl
         return;
     }
 
@@ -313,7 +312,7 @@ void cfb_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
 
     memcpy(output, iv, sizeof(unsigned char)*bytes);
 
-    FILE *encrypted  = fopen("encrypted", "wb");
+    FILE *encrypted  = fopen(outfilename, "wb");
 
     encrypt(output, key,outText,encryptionType);
     
@@ -337,14 +336,14 @@ void cfb_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
 }
 
 
-void cfb_decrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType)
+void cfb_decrypt( int blockSize, int* key, char* infilename,char* outfilename,  unsigned char* iv, char* encryptionType)
 {
     int bytes=blockSize/8;
 
-    FILE *ciphertext  = fopen(filename, "rb");
+    FILE *ciphertext  = fopen(infilename, "rb");
 
     if(!ciphertext){
-        printf("encryptionType file %s not found", filename); endl
+        printf("encryptionType file %s not found", infilename); endl
         return;
     }
 
@@ -353,7 +352,7 @@ void cfb_decrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
 
     memcpy(output, iv, sizeof(unsigned char)*bytes);
 
-    FILE *decrypted  = fopen("decrypted", "wb");
+    FILE *decrypted  = fopen(outfilename, "wb");
 
     
 
@@ -384,7 +383,7 @@ void cfb_decrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
 
 
 
-void ofb_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType)
+void ofb_encrypt( int blockSize, int* key, char* infilename, char* outfilename,  unsigned char* iv, char* encryptionType)
 {   
     unsigned char nonce[16];
     if(blockSize==64){
@@ -395,10 +394,10 @@ void ofb_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
     }
     int bytes=blockSize/8;
 
-    FILE *text  = fopen(filename, "rb");
+    FILE *text  = fopen(infilename, "rb");
 
     if(!text){
-        printf("Input file %s not found", filename); endl
+        printf("Input file %s not found", infilename); endl
         return;
     }
 
@@ -410,7 +409,7 @@ void ofb_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
     
     unsigned char count[bytes];
 
-    FILE *encrypted  = fopen("encrypted", "wb");
+    FILE *encrypted  = fopen(outfilename, "wb");
 
     int i,k=0;
     int loop=1;
@@ -447,14 +446,14 @@ void ofb_encrypt( int blockSize, int* key, char* filename,  unsigned char* iv, c
 }
 
 
-void ofb_decrypt( int blockSize, int* key, char* filename,  unsigned char* nonce, char* encryptionType)
+void ofb_decrypt( int blockSize, int* key, char* infilename,char* outfilename,  unsigned char* nonce, char* encryptionType)
 {
     int bytes=blockSize/8;
 
-    FILE *ciphertext  = fopen(filename, "rb");
+    FILE *ciphertext  = fopen(infilename, "rb");
 
     if(!ciphertext){
-        printf("Encrypted file %s not found", filename); endl
+        printf("Encrypted file %s not found", infilename); endl
         return;
     }
 
@@ -466,7 +465,7 @@ void ofb_decrypt( int blockSize, int* key, char* filename,  unsigned char* nonce
     
     unsigned char count[bytes];
 
-    FILE *decrypted  = fopen("decrypted", "wb");
+    FILE *decrypted  = fopen(outfilename, "wb");
 
     int i,k=0;
     int loop=1;
@@ -504,11 +503,7 @@ void ofb_decrypt( int blockSize, int* key, char* filename,  unsigned char* nonce
 }
 
 
-void counter_encrypt(int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType){
-    counter_encryptWithOutputName(blockSize, key,filename, "encrypted", iv, encryptionType);
-}
-
-void counter_encryptWithOutputName( int blockSize, int* key, char* infilename, char* outfilename,  unsigned char* iv, char* encryptionType)
+void counter_encrypt( int blockSize, int* key, char* infilename, char* outfilename,  unsigned char* iv, char* encryptionType)
 {   
     unsigned char nonce[16];
     if(blockSize==64){
@@ -582,9 +577,9 @@ void counter_encryptWithOutputName( int blockSize, int* key, char* infilename, c
    
 }
 
-void counter_decrypt( int blockSize, int* key, char* filename,  unsigned char* iv, char* encryptionType)
+void counter_decrypt( int blockSize, int* key, char* infilename,char* outfilename,  unsigned char* iv, char* encryptionType)
 {   
-    counter_encryptWithOutputName(blockSize, key,filename, "decrypted", iv, encryptionType);
+    counter_encrypt(blockSize, key,infilename, outfilename, iv, encryptionType);
    
 }
 

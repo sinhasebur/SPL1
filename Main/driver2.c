@@ -88,8 +88,8 @@ void printError(){
     endl
     printf("Incorrect Command"); endl;
     printf("Please follow the following standard"); endl;
-    printf("./driver -enc - dec  -mode -in -out -key -iv"); endl;
-    printf("./driver -attack"); endl;
+    printf("./cryptool -enc - dec  -mode -in -out -key -iv"); endl;
+    printf("./cryptool -attack"); endl;
     endl;
     printf("Attacks: patternLeak kpta mitm"); endl;
     endl;
@@ -238,18 +238,18 @@ void execute(struct values* command){
     char* encr= enc(command->encryp);
     
     if(command->task==1){ //encrypt
-        if(command->mode==ecb) {ecb_encrypt(block, command->key, command->inputfilename, encr);}
-        else if(command->mode==cbc){ cbc_encrypt(block, command->key, command->inputfilename, command->iv, encr);}
-        else if(command->mode==ofb){ ofb_encrypt(block, command->key, command->inputfilename, command->iv, encr);}
-        else if(command->mode==cfb){ cfb_encrypt(block, command->key, command->inputfilename, command->iv, encr);}
-        else if(command->mode==counter){ counter_encrypt(block, command->key, command->inputfilename, command->iv, encr);}
+        if(command->mode==ecb) {ecb_encrypt(block, command->key, command->inputfilename,command->outputfilename, encr);}
+        else if(command->mode==cbc){ cbc_encrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
+        else if(command->mode==ofb){ ofb_encrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
+        else if(command->mode==cfb){ cfb_encrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
+        else if(command->mode==counter){ counter_encrypt(block, command->key, command->inputfilename, command->outputfilename, command->iv, encr);}
     }
     else if(command->task==2){ //decrypt
-        if(command->mode==ecb) {ecb_decrypt(block, command->key, command->inputfilename, encr);}
-        else if(command->mode==cbc){ cbc_decrypt(block, command->key, command->inputfilename, command->iv, encr);}
-        else if(command->mode==ofb){ ofb_decrypt(block, command->key, command->inputfilename, command->iv, encr);}
-        else if(command->mode==cfb){ cfb_decrypt(block, command->key, command->inputfilename, command->iv, encr);}
-        else if(command->mode==counter){ counter_decrypt(block, command->key, command->inputfilename, command->iv, encr);}
+        if(command->mode==ecb) {ecb_decrypt(block, command->key, command->inputfilename,command->outputfilename, encr);}
+        else if(command->mode==cbc){ cbc_decrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
+        else if(command->mode==ofb){ ofb_decrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
+        else if(command->mode==cfb){ cfb_decrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
+        else if(command->mode==counter){ counter_decrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
     }
     else if(command->task==5){
         if(command->attackType==1) {}

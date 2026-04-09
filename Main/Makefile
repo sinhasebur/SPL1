@@ -2,7 +2,7 @@ CC := gcc
 CFLAGS := -Wall -Wextra
 LDFLAGS := -lm
 
-TARGET := driver2
+TARGET := cryptool
 
 SRCS :=   des.c 2des.c 3des.c encryption.c modes.c patternLeak.c MITMattack.c desKnownTextAttack.c driver2.c aes.c
 OBJS := $(SRCS:.c=.o)
