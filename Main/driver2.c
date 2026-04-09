@@ -11,6 +11,10 @@
 #include "patternLeak.h"
 #include "desKPTA.h"
 
+#include "conversions.h"
+#include "randomKey.h"
+
+
 
 
 #define endl printf("\n");
@@ -58,7 +62,7 @@ int commandType(char* x);
 int writeCommand(int comm, struct values* command, char* x);
 void checkValidity(struct values* command);
 void execute (struct values* command);
-
+void printInfo(struct values* command);
 
 
 
@@ -74,6 +78,8 @@ int main(int argc , char* argv[]){
     checkValidity(&command);
 
     execute(&command);
+
+    printInfo(&command);
     
 
     end = clock();
@@ -131,7 +137,7 @@ int writeCommand(int comm, struct values* command, char* x){
     else if(comm==4){
         command->outputfilename=x;
     }
-    else if(comm=6){
+    else if(comm==6){
         if(!strcmp(x, "ecb") || !strcmp(x, "ECB")) command->mode=ecb;
         else if(!strcmp(x, "CBC") || !strcmp(x, "cbc")) command->mode=cbc;
         else if(!strcmp(x, "OFB") || !strcmp(x, "ofb")) command->mode=ofb;
@@ -142,6 +148,28 @@ int writeCommand(int comm, struct values* command, char* x){
             printf("Incorrect mode name"); endl
             printError();
         } 
+    }
+    else if(comm==7){ //key
+        if(!strcmp(x, "random")){
+
+            if(command->task==2){
+                printf("Please do not use random for decryption"); endl printError();
+            }
+            
+            if(command->encryp==AES) command->keybits=128;
+            else if(command->encryp==_2DES) command->keybits=128;
+            else if(command->encryp==_3DES) command->keybits=192;
+            else if(command->encryp==DES) command->keybits=64; 
+            
+            int keyspace=command->keybits;
+            generateRandomKey(command->keybits,keyspace, command->key);
+            printf("Generated pseudorandom key"); endl
+        }
+        else{
+            hextoBits(x,command->key);
+            //printf("%d",strlen(x));
+            command->keybits=strlen(x)*4;
+        }
     }
 }
 
@@ -165,6 +193,9 @@ void parse(struct values* command, int argc , char* argv[]){
         // if(!writeCommand(0, command, argv[i])){
         //     printError();
         // }
+        else{
+            writeCommand(0, command, argv[i]);
+        }
     }
 }
 
@@ -177,7 +208,8 @@ int commandType(char* x){
     if(!strcmp(x, "-in")) return 3;
     if(!strcmp(x, "-out")) return 4;
     if(!strcmp(x,"-attack")) return 5;
-    if(!strcmp(x,"-mode")) return 6;   
+    if(!strcmp(x,"-mode")) return 6;
+    if(!strcmp(x,"-key")) return 7;   
 
     printf("Incorrect argument");endl
     printError();
@@ -187,7 +219,7 @@ int commandType(char* x){
 
 void setDefaultValues(struct values* command){
     command->mode=-1;
-    command->encryp=1;
+    command->encryp=-1;
     command->task=-1;
     command->attackType=0;
 
@@ -215,9 +247,36 @@ void checkValidity (struct values* command){
         printError();
     }
     
-    // if(command->attackType!=0){
-    //     if(command->attackType==1 && enc)
-    // }
+    if(command->encryp==-1 ){
+        printf("Please have encryption type"); endl
+        printError();
+    }
+    
+
+    if(command->keybits!=-1){
+        if(command->encryp==AES && command->keybits!=128){
+            printf("Incorrect keytype, AES-128 uses 128 bit key"); endl
+            printError();
+        }
+        else if(command->encryp==DES && command->keybits!=64){
+            printf("Incorrect keytype, DES uses 64 bit key"); endl
+            printError();
+        }
+        else if(command->encryp==_2DES && command->keybits!=128){
+            printf("Incorrect keytype, 2DES uses 128 bit key"); endl
+            printError();
+        }
+        else if(command->encryp==_3DES && command->keybits!=192){
+            printf("Incorrect keytype, 3DES uses 192 bit key"); endl
+            printError();
+        }
+        else{
+
+        }
+    }
+
+
+
 }
 
 char * enc(int i){
@@ -253,5 +312,17 @@ void execute(struct values* command){
     }
     else if(command->task==5){
         if(command->attackType==1) {}
+    }
+}
+
+
+
+void printInfo(struct values* command){
+    if(command->keybits!=-1){
+        printf("Used key is : ");
+        char hex[193];
+        bitstoHex(command->key,hex, command->keybits);
+        printf("%s",hex);
+        endl 
     }
 }
