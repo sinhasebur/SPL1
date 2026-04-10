@@ -89,10 +89,10 @@ void bytetoHex(unsigned char* bytes, char* hex, int byteNumber){
         h2=bytes[i]&0x0F; 
         h1=(bytes[i]>>4)&0x0F; 
         
-        if(h1>=0 && h1<=9){hex[k]=h1+'0';}
+        if(h1<=9){hex[k]=h1+'0';}
         else{ hex[k]=h1-10+'a';}
         k++;
-        if(h2>=0 && h2<=9){hex[k+1]=h2+'0';}
+        if(h2>=0 && h2<=9){hex[k]=h2+'0';}
         else{ hex[k]=h2-10+'a';}
         k++;
     }
@@ -100,3 +100,19 @@ void bytetoHex(unsigned char* bytes, char* hex, int byteNumber){
 
 }
 
+
+__uint128_t bytesTo128(unsigned char* bytes){
+    __uint128_t integer=0;
+
+    for(int i=0;i<16;i++){
+        integer= (integer<<8)|(bytes[i]);
+    }
+    return integer;
+}
+
+void uint128ToBytes(__uint128_t integer, unsigned char* bytes) {
+    for (int i = 15; i >= 0; i--) {
+        bytes[i] = (unsigned char)(integer & 0xFF);
+        integer >>= 8;
+    }
+}

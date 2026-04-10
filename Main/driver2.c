@@ -5,6 +5,7 @@
 
 #include "encryption.h"
 #include "modes.h"
+#include "authenticationModes.h"
 #include "attacks.h"
 
 #include "conversions.h"
@@ -30,7 +31,7 @@
 #define counter 5
 
 //authentication modes 
-#define gcm 6;
+#define gcm 6
 
 //attacks
 #define MeetInTheMiddle 1
@@ -49,7 +50,8 @@ struct values{
     int ivbits;
     unsigned char iv[16];
 
-    int randomiv,randomkey; // 0 is default, 1 is random, -1 is specific
+    int ivState,keyState; // 0 is default, 1 is random, -1 is specific
+    unsigned char authenticationTag[16];
 } command;
 
 
@@ -90,8 +92,8 @@ int main(int argc , char* argv[]){
 
 void printError(char * x){
     printf("Incorrect Command : %s" , x); endl endl
-    printf("Please follow the following standard"); endl
-    printf("./cryptool -enc - dec  -mode -in -out -key -iv"); endl;
+    printf("Please Follow the following standard"); endl
+    printf("./cryptool enc/dec/break -alg  -mode -in -out -key -iv"); endl;
     printf("./cryptool -attack"); endl;
     endl;
     printf("Attacks: patternLeak kpta mitm"); endl;
@@ -103,7 +105,7 @@ void printError(char * x){
 int writeCommand(int comm, struct values* command, char* x){
     //printf(" %s",x); endl;
 
-    if(comm==0){ //default
+    if(comm==1){ //algo
         if(!strcmp(x, "AES") || !strcmp(x, "aes")) command->encryp=AES;
         else if(!strcmp(x, "DES") || !strcmp(x, "des") ) command->encryp=DES;
         else if(!strcmp(x, "2DES") || !strcmp(x, "2des") ) command->encryp=_2DES;
@@ -111,12 +113,20 @@ int writeCommand(int comm, struct values* command, char* x){
         else{}
         return 1;
     }
-    else if( (comm==1) || comm==2){ //enc 1,  decrypt 2 , attack 5
+    else if( (comm==0)){ //enc 1,  decrypt 2 , attack 5
+        
         if(command->task!=-1){ 
             printError("Multiple Functions given at once");
         }
         else{
-            command->task=comm;
+            if(!strcmp(x, "enc"))
+                command->task=1;
+            else if(!strcmp(x, "dec")){
+                command->task=2;
+            }
+            else if(!strcmp(x, "break")){
+                command->task=5;
+            }
         }
         return 1;
     }
@@ -134,7 +144,7 @@ int writeCommand(int comm, struct values* command, char* x){
         else if(!strcmp(x, "OFB") || !strcmp(x, "ofb")) command->mode=ofb;
         else if(!strcmp(x, "CFB") || !strcmp(x, "cfb")) command->mode=cfb;
         else if(!strcmp(x, "counter") || !strcmp(x, "Counter")) command->mode=counter;
-        else if(!strcmp(x, "GCM") || !strcmp(x, "gcm")) {command->mode=gcm;} 
+        else if(!strcmp(x, "GCM") || !strcmp(x, "gcm")) {command->mode=gcm; command->ivbits=96;} 
         else{
             printError("Incorrect Mode name");
         } 
@@ -150,13 +160,13 @@ int writeCommand(int comm, struct values* command, char* x){
             int keyspace=command->keybits;
             generateRandomKey(command->keybits,keyspace, command->key);
             printf("Generated pseudorandom key"); endl
-            command->randomkey=1;
+            command->keyState=1;
         }
         else{
             hextoBits(x,command->key);
             //printf("%d",strlen(x));
             command->keybits=strlen(x)*4;
-            command->randomkey=-1;
+            command->keyState=-1;
         }
         return 1;
     }
@@ -186,19 +196,21 @@ int writeCommand(int comm, struct values* command, char* x){
             hextoBytes(hexIV,command->iv);
 
             printf("Generated pseudorandom iv"); endl
-            command->randomiv=1;
+            command->ivState=1;
         }
         else{
             hextoBytes(x,command->iv);
             //printf("%d",strlen(x));
             command->ivbits=strlen(x)*4;
-            command->randomkey=-1;
+            command->keyState=-1;
         }
         return 1;
     }
     else if(comm==5){ //attack
 
-        command->task=comm;
+        if (command->task!=comm){
+            printf("Incorrect use of attack");
+        }
         
         if(!strcmp(x, "patternLeak") || !strcmp(x, "pl") || !strcmp(x, "PL")){ command->attackType=1; } 
         else if(!strcmp(x, "knownPlaintextAttack") || !strcmp(x, "KPTA") || !strcmp(x, "kpta")) { 
@@ -216,7 +228,6 @@ int writeCommand(int comm, struct values* command, char* x){
         return 1;
     }
 
-    return 0;
 }
 
 
@@ -224,7 +235,9 @@ void parse(struct values* command, int argc , char* argv[]){
     
     int comm;
     
-    for(int i=0; i<argc; i++){
+    writeCommand(0, command, argv[1]);
+
+    for(int i=2; i<argc; i=i+2){
         if(argv[i][0]=='-'){
             comm = commandType(argv[i]);
 
@@ -234,7 +247,7 @@ void parse(struct values* command, int argc , char* argv[]){
         
         }
         else{
-            writeCommand(0, command, argv[i]);
+            printError("Incorrect flag use");
         }
     }
 }
@@ -243,7 +256,7 @@ void parse(struct values* command, int argc , char* argv[]){
 int commandType(char* x){
     //printf("%s",x);
 
-    if(!strcmp(x, "-enc")) return 1;
+    if(!strcmp(x, "-alg") || !strcmp(x, "-algo")) return 1;
     if(!strcmp(x, "-dec")) return 2;
     if(!strcmp(x, "-in")) return 3;
     if(!strcmp(x, "-out")) return 4;
@@ -279,7 +292,7 @@ void setDefaultValues(struct values* command){
     unsigned char defaultIV[16]= {'a','b','c','d','e','f','g','h','a','b','c','d','e','f','g','h'};
     memcpy(command->iv,defaultIV,16*sizeof(unsigned char));
 
-    command->randomkey=0; command->randomiv=0;
+    command->keyState=0; command->ivState=0;
 }
 
 
@@ -295,7 +308,7 @@ void checkValidity (struct values* command){
 
     if(command->keybits!=-1){
 
-        if(command->task==2 && command->randomkey==1){
+        if(command->task==2 && command->keyState==1){
             printError("do not use random for decryption");
         }
 
@@ -318,17 +331,19 @@ void checkValidity (struct values* command){
 
     if(command->ivbits!=-1){
         
-        
-        if(command->task==2 && command->randomiv==0){
-             printError("Random used in decryption, not valid");
+        if(command->task==2 && command->ivState==1){
+            printError("Random used in decryption, not valid");
         }
         
-        if(command->mode==1 && (command->randomiv!=0)){
+        if(command->mode==1 && (command->ivState!=0)){
             printError("ECB mode does not require IV");
         }
         
-        if(command->encryp==AES && command->ivbits!=128){
+        if( (command->encryp==AES && command->ivbits!=128 ) && command->mode!=gcm){
             printError("Incorrect iv, AES-128 uses 128 bit iv");
+        }
+        else if(command->mode==gcm && command->ivState==-1 && command->ivbits!=96){
+            printError("AES_GCM uses 96 bit iv");
         }
         else if(command->encryp==DES && command->ivbits!=64){
             printError("Incorrect keytype, DES uses 64 bit iv");
@@ -352,6 +367,11 @@ void checkValidity (struct values* command){
         }
     }
 
+    if(command->mode==gcm){
+        if(command->encryp!=AES){
+            printError("GCM is only for AES");
+        }
+    }
 }
 
 
@@ -367,6 +387,9 @@ void execute(struct values* command){
         else if(command->mode==ofb){ ofb_encrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
         else if(command->mode==cfb){ cfb_encrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
         else if(command->mode==counter){ counter_encrypt(block, command->key, command->inputfilename, command->outputfilename, command->iv, encr);}
+        else if(command->mode==gcm){
+            gcm_encrypt(command->key,command->inputfilename, command->iv, command->outputfilename, command->authenticationTag );
+        }
     }
     else if(command->task==2){ //decrypt
         if(command->mode==ecb) {ecb_decrypt(block, command->key, command->inputfilename,command->outputfilename, encr);}
@@ -374,6 +397,9 @@ void execute(struct values* command){
         else if(command->mode==ofb){ ofb_decrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
         else if(command->mode==cfb){ cfb_decrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
         else if(command->mode==counter){ counter_decrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
+        else if(command->mode==gcm){
+            gcm_decrypt(command->key,command->inputfilename, command->iv, command->outputfilename, command->authenticationTag );
+        }
     }
     else if(command->task==5){
         if(command->attackType==1) {
@@ -385,29 +411,41 @@ void execute(struct values* command){
 
 
 void printInfo(struct values* command){
-    if(command->keybits!=-1){
+    if(command->keyState==1){
         printf("Used key is : ");
         char hex[193];
         bitstoHex(command->key,hex, command->keybits);
         printf("%s",hex);
         endl 
     }
-    else if(command->randomkey==-1){
+    else if(command->keyState==0){
         printf("Used default key");endl
     }
     else{
 
     }
 
-    if(command->ivbits!=-1){
+    if(command->ivState==1 ){
         printf("Used iv is : "); 
-        char hex[32];
+        char hex[33];
         bytetoHex(command->iv,hex,((command->ivbits)+7)/8);
         
         printf("%s",hex);
         endl 
     }
-    else if(command->randomiv==-1){
-        printf("Used default iv");
+    else if(command->ivState==0){
+        printf("Used default iv");endl
+    }
+
+
+    if(command->mode==gcm){
+        char hexTag[33];
+        
+        bytetoHex(command->authenticationTag,hexTag,16);
+        
+        //printf("%s",hexTag);
+        endl
+        printf("Authentication Tag is : %s", hexTag);endl
     }
 }
+
