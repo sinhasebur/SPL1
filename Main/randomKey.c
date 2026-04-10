@@ -22,7 +22,7 @@ int random01(){
 
 void generateRandomKey(int keysize, int keyspace, int* key){
     
-    random_state=seed();
+    random_state=seed()+keyspace%3;
     for(int i=0;i<keyspace;i++){
         key[i]=random01();
     }

@@ -81,3 +81,22 @@ void bitstoHex(int* bits,char* hex, int numberBits) {
 }
 
 
+void bytetoHex(unsigned char* bytes, char* hex, int byteNumber){
+
+    int k=0;
+    for(int i=0;i<byteNumber;i++){
+        int h1, h2;
+        h2=bytes[i]&0x0F; 
+        h1=(bytes[i]>>4)&0x0F; 
+        
+        if(h1>=0 && h1<=9){hex[k]=h1+'0';}
+        else{ hex[k]=h1-10+'a';}
+        k++;
+        if(h2>=0 && h2<=9){hex[k+1]=h2+'0';}
+        else{ hex[k]=h2-10+'a';}
+        k++;
+    }
+    hex[k]='\0';
+
+}
+

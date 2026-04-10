@@ -3,9 +3,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "des.h"
-#include "2des.h"
-#include "3des.h"
+#include "encryption.h"
 #include "modes.h"
 #include "mitm.h"
 #include "patternLeak.h"
@@ -13,7 +11,6 @@
 
 #include "conversions.h"
 #include "randomKey.h"
-
 
 
 
@@ -51,6 +48,7 @@ struct values{
     char* inputfilename, *outputfilename;
     int key[192];
     int keybits;
+    int ivbits;
     unsigned char iv[16];
 } command;
 
@@ -155,7 +153,7 @@ int writeCommand(int comm, struct values* command, char* x){
             if(command->task==2){
                 printf("Please do not use random for decryption"); endl printError();
             }
-            
+
             if(command->encryp==AES) command->keybits=128;
             else if(command->encryp==_2DES) command->keybits=128;
             else if(command->encryp==_3DES) command->keybits=192;
@@ -169,6 +167,40 @@ int writeCommand(int comm, struct values* command, char* x){
             hextoBits(x,command->key);
             //printf("%d",strlen(x));
             command->keybits=strlen(x)*4;
+        }
+    }
+    else if(comm==8){
+
+        if(command->mode==ecb){
+            printf("ecb doesnt need iv"); 
+            endl printError();
+        }
+        if(!strcmp(x, "random")){
+
+            if(command->task==2){
+                printf("Please do not use random for decryption"); endl printError();
+            }
+
+            if(command->encryp==AES) command->ivbits=128;
+            else if(command->encryp==_2DES) command->ivbits=64;
+            else if(command->encryp==_3DES) command->ivbits=64;
+            else if(command->encryp==DES) command->ivbits=64; 
+            
+            int ivSize=command->ivbits;
+            int intIV[128];
+            char hexIV[32];
+
+            generateRandomKey(ivSize,ivSize, intIV);
+
+            bitstoHex(intIV,hexIV,ivSize);
+            hextoBytes(hexIV,command->iv);
+
+            printf("Generated pseudorandom iv"); endl
+        }
+        else{
+            hextoBytes(x,command->iv);
+            //printf("%d",strlen(x));
+            command->ivbits=strlen(x)*4;
         }
     }
 }
@@ -209,7 +241,8 @@ int commandType(char* x){
     if(!strcmp(x, "-out")) return 4;
     if(!strcmp(x,"-attack")) return 5;
     if(!strcmp(x,"-mode")) return 6;
-    if(!strcmp(x,"-key")) return 7;   
+    if(!strcmp(x,"-key")) return 7;
+    if(!strcmp(x,"-iv")) return 8;
 
     printf("Incorrect argument");endl
     printError();
@@ -234,6 +267,7 @@ void setDefaultValues(struct values* command){
     memcpy(command->key,defaultkey,192*sizeof(int));
 
     command->keybits=-1;
+    command->ivbits=-1;
     
     unsigned char defaultIV[16]= {'a','b','c','d','e','f','g','h','a','b','c','d','e','f','g','h'};
     memcpy(command->iv,defaultIV,16*sizeof(unsigned char));
@@ -324,5 +358,20 @@ void printInfo(struct values* command){
         bitstoHex(command->key,hex, command->keybits);
         printf("%s",hex);
         endl 
+    }
+    else{
+        //printf("Used default key");endl
+    }
+
+    if(command->ivbits!=-1){
+        printf("Used iv is : "); 
+        char hex[32];
+        bytetoHex(command->iv,hex,((command->ivbits)+8)/8);
+        
+        printf("%s",hex);
+        endl 
+    }
+    else{
+        //printf("Used default iv");
     }
 }
