@@ -120,3 +120,17 @@ int getType( char* x){
         //return 0;
     }
 }
+
+
+char * encNumber(int i){
+    if(i==1) return "des";
+    if(i==2) return "2des";
+    if(i==3) return "3des";
+    if(i==4) return "aes";
+
+}
+
+int getBlockSize(int i){
+    if(i==4) return 128;
+    else return 64;
+}

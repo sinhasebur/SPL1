@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "des.h"
-#include "2des.h"
-#include "3des.h"
+#include "encryption.h"
 #include "modes.h"
 
 
@@ -12,17 +10,13 @@
 #define HEADERSIZE 54
 
 
-void patternLeak()
+void patternLeak(int * key, char* inputFilename, char* outputFilename, int mode, char* iv , int encryp)
 {
-    int key[64] = {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1};
-    int key2[128]={1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0};
-
-    //unsigned char iv[8]={'a','b','c','d','e','f','g','h'};
-
-    FILE *text = fopen("input", "rb");
+    
+    FILE *text = fopen(inputFilename, "rb");
 
     if(!text){
-        printf("Input file not found"); endl
+        printf("Input file not found, please have %s", inputFilename); endl
         exit(1);
     }
 
@@ -37,10 +31,29 @@ void patternLeak()
     fclose(text);
 
     //ecb_encrypt(128, key2, "input", "aes");
-    ecb_encrypt(64, key, "input", "des");
+
+    if(mode==1){
+        printf("Showing pattern Leak in ECB\n");
+        ecb_encrypt(getBlockSize(encryp),key,inputFilename,"Encrypted", encNumber(encryp));
+    }
+    else{
+        printf("Other modes than ECB do not leak pattern\n");
+        if(mode==2){
+            cbc_encrypt(getBlockSize(encryp),key,inputFilename, "Encrypted",iv, encNumber(encryp));
+        }
+        else if(mode==3){
+            cfb_encrypt(getBlockSize(encryp),key,inputFilename, "Encrypted",iv, encNumber(encryp));
+        }
+        else if(mode==4){
+            ofb_encrypt(getBlockSize(encryp),key,inputFilename, "Encrypted",iv, encNumber(encryp));
+        }
+        else if(mode==5){
+            counter_encrypt(getBlockSize(encryp),key,inputFilename, "Encrypted",iv, encNumber(encryp));
+        }
+    }
     
-    FILE *entext      = fopen("encrypted", "rb");
-    FILE *patternLeak = fopen("patternLeak", "wb");
+    FILE *entext      = fopen("Encrypted", "rb");
+    FILE *patternLeak = fopen(outputFilename, "wb");
 
     if(!entext){
         printf("Output file not found"); endl
@@ -48,7 +61,7 @@ void patternLeak()
     }
 
     if(!patternLeak){
-        printf("sad");endl
+        printf("outputfilename error");endl
     }
 
     int n=0,i;
