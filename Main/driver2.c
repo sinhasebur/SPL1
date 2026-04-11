@@ -234,7 +234,7 @@ int writeCommand(int comm, struct values* command, char* x){
             hextoBytes(x,command->iv);
             //printf("%d",strlen(x));
             command->ivbits=strlen(x)*4;
-            command->keyState=-1;
+            command->ivState=-1;
         }
         
     }
@@ -281,6 +281,7 @@ int writeCommand(int comm, struct values* command, char* x){
         }
     }
 
+    return 1;
 }
 
 
@@ -451,7 +452,7 @@ void checkValidity (struct values* command){
 
 
     if(command->task==11){
-        if(command->knownPTlocation=10){
+        if(command->knownPTlocation==10){
             if(command->inputfilename=="input"){
                 printf("No input given, looking for \"input\" file");
             }
@@ -538,7 +539,7 @@ void printInfo(struct values* command){
 
     }
 
-    if(command->ivState==1 && (command->task==1 ||command->task==2)){
+    if( 1 |(command->ivState==1 && (command->task==1 ||command->task==2)) ){
         printf("Used iv is : "); 
         char hex[33];
         bytetoHex(command->iv,hex,((command->ivbits)+7)/8);
