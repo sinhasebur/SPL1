@@ -10,8 +10,8 @@
 
 #include "conversions.h"
 #include "randomKey.h"
-
-
+#include "sbox.h"
+#include "mitm.h"
 
 #define endl printf("\n");
 
@@ -34,9 +34,9 @@
 #define gcm 6
 
 //attacks
-#define MeetInTheMiddle 1
+#define MeetInTheMiddle 3
 #define KPTA 2
-#define PatternLeak 3
+#define PatternLeak 1
 
 struct values{
     int mode;
@@ -52,6 +52,9 @@ struct values{
 
     int ivState,keyState; // 0 is default, 1 is random, -1 is specific
     unsigned char authenticationTag[16];
+
+    unsigned char knownPT[65];
+    int knownPTlocation; //0 is not known, 1 is specific, 2 is to read manually
 } command;
 
 
@@ -91,13 +94,21 @@ int main(int argc , char* argv[]){
 
 
 void printError(char * x){
+    
+    endl
     printf("Incorrect Command : %s" , x); endl endl
-    printf("Please Follow the following standard"); endl
+    // printf("Please Follow the following standard"); endl
     printf("./cryptool enc/dec/break -alg  -mode -in -out -key -iv"); endl;
+    
+    printf("Key- random, random20 "); endl
+    printf("modes are ecb, cbc, ofb, cfb, counter, gcm"); endl
+    endl
     printf("./cryptool -attack"); endl;
-    endl;
     printf("Attacks: patternLeak kpta mitm"); endl;
     endl;
+    printf("./cryptool inspect -show"); endl;
+    printf("Show: sbox firstblock"); endl;
+    
     exit(1);
 }
 
@@ -105,15 +116,8 @@ void printError(char * x){
 int writeCommand(int comm, struct values* command, char* x){
     //printf(" %s",x); endl;
 
-    if(comm==1){ //algo
-        if(!strcmp(x, "AES") || !strcmp(x, "aes")) command->encryp=AES;
-        else if(!strcmp(x, "DES") || !strcmp(x, "des") ) command->encryp=DES;
-        else if(!strcmp(x, "2DES") || !strcmp(x, "2des") ) command->encryp=_2DES;
-        else if(!strcmp(x, "3DES") || !strcmp(x, "3des") ) command->encryp=_3DES;
-        else{}
-        return 1;
-    }
-    else if( (comm==0)){ //enc 1,  decrypt 2 , attack 5
+    
+    if( (comm==0)){ //enc 1,  decrypt 2 , attack 5
         
         if(command->task!=-1){ 
             printError("Multiple Functions given at once");
@@ -127,16 +131,33 @@ int writeCommand(int comm, struct values* command, char* x){
             else if(!strcmp(x, "break")){
                 command->task=5;
             }
+            // else if(!strcmp(x, "convert")){
+            //     command->task=11;
+            // }
+            else if (!strcmp(x, "inspect")) {
+                command->task=11;
+            }
+            else{
+                printError("Incorrect Function given");
+            }
         }
-        return 1;
+        
+    }
+    else if(comm==1){ //algo
+        if(!strcmp(x, "AES") || !strcmp(x, "aes")) command->encryp=AES;
+        else if(!strcmp(x, "DES") || !strcmp(x, "des") ) command->encryp=DES;
+        else if(!strcmp(x, "2DES") || !strcmp(x, "2des") ) command->encryp=_2DES;
+        else if(!strcmp(x, "3DES") || !strcmp(x, "3des") ) command->encryp=_3DES;
+        else{}
+        
     }
     else if(comm==3){ //input
         command->inputfilename=x;
-        return 1;
+        
     }
     else if(comm==4){ // output
         command->outputfilename=x;
-        return 1;
+        
     }
     else if(comm==6){ //mode
         if(!strcmp(x, "ecb") || !strcmp(x, "ECB")) command->mode=ecb;
@@ -148,7 +169,7 @@ int writeCommand(int comm, struct values* command, char* x){
         else{
             printError("Incorrect Mode name");
         } 
-        return 1;
+        
     }
     else if(comm==7){ //key
         if(!strcmp(x, "random")){
@@ -162,13 +183,24 @@ int writeCommand(int comm, struct values* command, char* x){
             printf("Generated pseudorandom key"); endl
             command->keyState=1;
         }
+        else if(!strcmp(x, "random20")){
+            if(command->encryp==AES) command->keybits=128;
+            else if(command->encryp==_2DES) command->keybits=128;
+            else if(command->encryp==_3DES) command->keybits=192;
+            else if(command->encryp==DES) command->keybits=64; 
+            
+            int keyspace=command->keybits;
+            generateRandomKey(command->keybits,20, command->key);
+            printf("Generated pseudorandom key of keyspace 20"); endl
+            command->keyState=1;
+        }
         else{
             hextoBits(x,command->key);
             //printf("%d",strlen(x));
             command->keybits=strlen(x)*4;
             command->keyState=-1;
         }
-        return 1;
+        
     }
     else if(comm==8){  //iv
   
@@ -204,7 +236,7 @@ int writeCommand(int comm, struct values* command, char* x){
             command->ivbits=strlen(x)*4;
             command->keyState=-1;
         }
-        return 1;
+        
     }
     else if(comm==5){ //attack
 
@@ -214,18 +246,39 @@ int writeCommand(int comm, struct values* command, char* x){
         
         if(!strcmp(x, "patternLeak") || !strcmp(x, "pl") || !strcmp(x, "PL")){ command->attackType=1; } 
         else if(!strcmp(x, "knownPlaintextAttack") || !strcmp(x, "KPTA") || !strcmp(x, "kpta")) { 
-            command->attackType=1; 
+            command->attackType=PatternLeak; 
             //command->encryp=DES; 
         }
         else if(!strcmp(x, "meetInTheMiddle") || !strcmp(x, "MITM") || !strcmp(x, "mitm")) {
-            command->attackType=3; 
+            command->attackType=MeetInTheMiddle; 
             //command->encryp=_2DES;
         }
         else{ 
             printError("Incorrect Attack Name");
         } 
         
-        return 1;
+    }
+    else if(comm==11){
+        if(!strcmp(x, "AES-Sbox") || !strcmp(x, "AES-sbox") ){
+            GenerateSBOX();
+            exit(1);
+        }
+        if(!strcmp(x, "firstblock")){
+            command->knownPTlocation=10;
+        }
+    }
+    else if(comm==9){
+        if(!strcmp(x, "scan") ){
+            command->knownPTlocation=2;
+        }
+        else{
+            if(strlen(x)!=128){
+                printError("Incorrect known plaintext length");
+            }
+            unsigned char pt[64];
+            hextoBytes(x, command->knownPT); 
+            command->knownPTlocation=1;
+        }
     }
 
 }
@@ -264,7 +317,8 @@ int commandType(char* x){
     if(!strcmp(x,"-mode")) return 6;
     if(!strcmp(x,"-key")) return 7;
     if(!strcmp(x,"-iv")) return 8;
-
+    if(!strcmp(x,"-knownPT")) return 9;
+    if(!strcmp(x,"-show")) return 11;
     printError("Incorrect Flag used");
 }
 
@@ -293,6 +347,8 @@ void setDefaultValues(struct values* command){
     memcpy(command->iv,defaultIV,16*sizeof(unsigned char));
 
     command->keyState=0; command->ivState=0;
+
+    command->knownPTlocation=0;
 }
 
 
@@ -301,34 +357,38 @@ void checkValidity (struct values* command){
         printError("Please have proper arguments");
     }
     
-    if(command->encryp==-1 ){
-        printError("Please have encryption type");
+    if((command->task==1 || command->task==2 )){
+        
+        if(command->encryp==-1  && (command->task==1 || command->task==2 )){
+            printError("Please have encryption type");
+        }
+        
+
+        if(command->keybits!=-1){
+
+            if(command->task==2 && command->keyState==1){
+                printError("do not use random for decryption");
+            }
+
+            if(command->encryp==AES && command->keybits!=128){
+                printError("Incorrect keytype, AES-128 uses 128 bit key");
+            }
+            else if(command->encryp==DES && command->keybits!=64){
+                printError("Incorrect keytype, DES uses 64 bit key");
+            }
+            else if(command->encryp==_2DES && command->keybits!=128){
+                printError("Incorrect keytype, 2DES uses 128 bit key");
+            }
+            else if(command->encryp==_3DES && command->keybits!=192){
+                printError("Incorrect keytype, 3DES uses 192 bit key");
+            }
+            else{
+
+            }
+        }
+
     }
-    
-
-    if(command->keybits!=-1){
-
-        if(command->task==2 && command->keyState==1){
-            printError("do not use random for decryption");
-        }
-
-        if(command->encryp==AES && command->keybits!=128){
-            printError("Incorrect keytype, AES-128 uses 128 bit key");
-        }
-        else if(command->encryp==DES && command->keybits!=64){
-            printError("Incorrect keytype, DES uses 64 bit key");
-        }
-        else if(command->encryp==_2DES && command->keybits!=128){
-            printError("Incorrect keytype, 2DES uses 128 bit key");
-        }
-        else if(command->encryp==_3DES && command->keybits!=192){
-            printError("Incorrect keytype, 3DES uses 192 bit key");
-        }
-        else{
-
-        }
-    }
-
+   
     if(command->ivbits!=-1){
         
         if(command->task==2 && command->ivState==1){
@@ -360,9 +420,40 @@ void checkValidity (struct values* command){
     }
     
     if(command->task==5){
-        if(command->attackType==1){ //pl
+        if(command->attackType==PatternLeak){ 
             if(command->mode==-1){
                 command->mode=1;
+            }
+        }
+
+        if(command->attackType==MeetInTheMiddle){
+            if(command->encryp==-1){
+                command->encryp=_2DES;
+            }
+            else if(command->encryp!=_2DES){
+                printError("MITM attack in only for 2des");
+            }
+
+            // if(command->key!=-1){
+            //     printError("This attack does not require Knowing the key");
+            // }
+
+            if(command->mode==-1){
+                printError("Please have mode defined");
+            }
+
+            if(command->mode!=ecb && command->iv==0){
+                printf("Modes other than ECB require iv, using default");
+            }
+            
+        }
+    }
+
+
+    if(command->task==11){
+        if(command->knownPTlocation=10){
+            if(command->inputfilename=="input"){
+                printf("No input given, looking for \"input\" file");
             }
         }
     }
@@ -405,27 +496,49 @@ void execute(struct values* command){
         if(command->attackType==1) {
             patternLeak(command->key, command->inputfilename, command->outputfilename,command->mode, command->iv,command->encryp);
         }
+        if(command->attackType==MeetInTheMiddle){
+            MITM(command->inputfilename, command->knownPT, command->outputfilename, command->mode, command->iv);
+        }
+
+    }
+    else if(command->task==11){
+        if(command->knownPTlocation==10){
+            unsigned char pt[64];
+            
+            FILE *r= fopen(command->inputfilename,"rb");
+
+            if (r){
+                fread(pt,1,64,r);
+                
+            }else{
+                printf("Could not get input file %s",command->inputfilename);
+            }
+            fclose(r);
+
+            char hexpt[129];
+            bytetoHex(pt,hexpt,64);
+            endl
+            printf("%s",hexpt ); endl
+        }
     }
 }
 
-
-
 void printInfo(struct values* command){
-    if(command->keyState==1){
+    if(command->keyState==1 && (command->task==1 ||command->task==2) ){
         printf("Used key is : ");
         char hex[193];
         bitstoHex(command->key,hex, command->keybits);
         printf("%s",hex);
         endl 
     }
-    else if(command->keyState==0){
+    else if(command->keyState==0 && (command->task==1 ||command->task==2) ){
         printf("Used default key");endl
     }
     else{
 
     }
 
-    if(command->ivState==1 ){
+    if(command->ivState==1 && (command->task==1 ||command->task==2)){
         printf("Used iv is : "); 
         char hex[33];
         bytetoHex(command->iv,hex,((command->ivbits)+7)/8);
@@ -433,7 +546,7 @@ void printInfo(struct values* command){
         printf("%s",hex);
         endl 
     }
-    else if(command->ivState==0){
+    else if(command->ivState==0 && command->mode!=ecb){
         printf("Used default iv");endl
     }
 

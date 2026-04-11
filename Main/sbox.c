@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "sbox.h"
 
 unsigned char multiplyGF(unsigned char a, unsigned char b);
 int getInverseGF(unsigned char byte);
 unsigned char MultiplywithA(unsigned char b);
 
-int main(){
+void GenerateSBOX(){
     
     unsigned char sBox[256]={0};
     

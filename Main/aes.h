@@ -13,8 +13,10 @@ void shiftRows(unsigned char* plainText);
 void mixColumns(unsigned char* plainText);
 void inverseMixColumns(unsigned char* cipherText);
 void matrixMultiply(unsigned char* matrixA, int matrixB[4][4]);
-unsigned char multiplyGF(unsigned char polynomial, int multiplier );
+unsigned char fastMultiplyGF(unsigned char polynomial, int multiplier );
 void addRoundKey(unsigned char* plainText, unsigned char* key);
 void inverseShiftRows(unsigned char* cipherText);
 void AESdecrypt(unsigned char* cipherText,unsigned char* resultText, unsigned char*  key, int rounds);
+
+
 #endif

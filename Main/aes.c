@@ -216,7 +216,7 @@ void matrixMultiply(unsigned char* matrixA, int matrixB[4][4]){
         for(int j=0;j<4;j++){
             for(int k=0;k<4;k++){
                 // printf("Trying to multiply %c and %d ", matrixA2[i][j], matrixB[k][j]);
-                ans[i][j] ^= multiplyGF(matrixA2[k][j],matrixB[i][k]) ;  // change to multiplication in GF(2^8)
+                ans[i][j] ^= fastMultiplyGF(matrixA2[k][j],matrixB[i][k]) ;  // change to multiplication in GF(2^8)
             }
             
         }
@@ -232,7 +232,7 @@ void matrixMultiply(unsigned char* matrixA, int matrixB[4][4]){
 
 
 
-unsigned char multiplyGF(unsigned char polynomial, int multiplier ){
+unsigned char fastMultiplyGF(unsigned char polynomial, int multiplier ){
     
     long long overflowed=polynomial;
     // printf("polynomial %x", overflowed); endl

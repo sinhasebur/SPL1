@@ -10,6 +10,6 @@ typedef struct {
 void swapEntry(middleEntry* a, middleEntry* b);
 int partition(middleEntry* a, int low, int high);
 void quicksort(middleEntry* a, int low , int high);
-void MITM();
+void MITM(char* inFile, char* KnownText, char* outFile , int mode, char* iv) ; 
 
 #endif

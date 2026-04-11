@@ -22,34 +22,33 @@ void swapEntry(middleEntry* a, middleEntry* b);
 int  partition(middleEntry* a, int low, int high);
 void quicksort(middleEntry* a, int low , int high);
 
-void MITM() 
+void MITM(char* inFile, char* KnownText, char* outFile , int mode, char* iv) 
 {    
-    int key2[128]={1 ,1 ,0 ,0 ,0 ,0 ,1 ,0 ,1 ,0 ,1 ,1 ,1 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0, 0 ,1 ,0 ,1 ,0 ,1 ,0 ,0 ,1 ,1 ,1 ,0 ,0 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 };
+    //int key2[128]={1 ,1 ,0 ,0 ,0 ,0 ,1 ,0 ,1 ,0 ,1 ,1 ,1 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0, 0 ,1 ,0 ,1 ,0 ,1 ,0 ,0 ,1 ,1 ,1 ,0 ,0 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 };
 
-    FILE *text  = fopen("input", "rb");
+    // FILE *text  = fopen(inFile, "rb");
 
-    if(!text){
-        printf("Input file not found"); endl
-        exit(1);
-    }
-    unsigned char KnownText[8];
+    // if(!text){
+    //     printf("Input %s file not found", inFile); endl
+    //     exit(1);
+    // }
 
-    for(int i=0;i<8;i++){
-        char x= fgetc(text);
-        KnownText[i]=x;
-    }
-    fseek(text, 0, SEEK_SET);
-    fclose(text);
+    // unsigned char KnownText[8];
 
-    ecb_encrypt(64,key2, "input", "2des");
+    // for(int i=0;i<8;i++){
+    //     char x= fgetc(text);
+    //     KnownText[i]=x;
+    // }
 
+    // fseek(text, 0, SEEK_SET);
+    // fclose(text);
 
-    FILE *entext = fopen("encrypted", "rb");
+    // ecb_encrypt(64,key, inFile, outFile, "2des");
 
-    FILE *mid1   = fopen("middle1", "rb");
+    FILE *entext = fopen(inFile, "rb");
 
     if(!entext){
-        printf("Output file not found"); endl
+        printf("Input file \"%s\" not found", inFile); endl
         exit(1);
     }
     
@@ -59,6 +58,7 @@ void MITM()
         char x = fgetc(entext);
         firstCipherBlock[i] = x;
     }
+
     int guessedKey[64] = {0};
 
     middleEntry *givesKey2 = malloc(sizeof(middleEntry) * keyspace);
@@ -154,7 +154,26 @@ void MITM()
         }
     }
 
-    ecb_decrypt(64, finalGuessedKey, "encrypted", "2des");
+    if(mode==1){
+        ecb_decrypt(64, finalGuessedKey, inFile, outFile, "2des");
+    }
+    else if(mode==2){
+        cbc_decrypt(64, finalGuessedKey, inFile, outFile,iv, "2des");
+    }
+    else if(mode==3){
+        cfb_decrypt(64, finalGuessedKey, inFile, outFile,iv, "2des");
+    }
+    else if(mode==4){
+        ofb_decrypt(64, finalGuessedKey, inFile, outFile,iv, "2des");
+    }
+    else if(mode==5){
+        counter_decrypt(64, finalGuessedKey, inFile, outFile,iv, "2des");
+    }
+    else{
+        printf("Incorrect Mode sent to mitm attack");
+        exit(1);
+    }
+    
 
     fclose(entext);
 
