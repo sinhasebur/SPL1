@@ -4,7 +4,9 @@
 
 
 void hextoBytes(char* hex, unsigned char* bytes) {
-    for (int i=0, k=0; i<strlen(hex); i+=2,k++) { 
+
+    int len=strlen(hex);
+    for (int i=0, k=0; i< len; i+=2,k++) { 
         unsigned char char1=0,char2=0;
         char1= hex[i];
         if(i+1<strlen(hex))
@@ -31,7 +33,8 @@ void hextoBytes(char* hex, unsigned char* bytes) {
 
 void hextoBits(const char* hex,int* bits) {
 
-    for (int i=0; i<strlen(hex); i++) { 
+    int len= strlen(hex);
+    for (int i=0; i< len; i++) { 
         unsigned char byte;
         byte= hex[i];
         int value;

@@ -4,7 +4,7 @@
 #include "des.h"
 #include "2des.h"
 #include "modes.h"
-
+#include "conversions.h"
 
 #define endl printf("\n");
 
@@ -22,28 +22,9 @@ void swapEntry(middleEntry* a, middleEntry* b);
 int  partition(middleEntry* a, int low, int high);
 void quicksort(middleEntry* a, int low , int high);
 
+
 void MITM(char* inFile, char* KnownText, char* outFile , int mode, char* iv) 
 {    
-    //int key2[128]={1 ,1 ,0 ,0 ,0 ,0 ,1 ,0 ,1 ,0 ,1 ,1 ,1 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0, 0 ,1 ,0 ,1 ,0 ,1 ,0 ,0 ,1 ,1 ,1 ,0 ,0 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 };
-
-    // FILE *text  = fopen(inFile, "rb");
-
-    // if(!text){
-    //     printf("Input %s file not found", inFile); endl
-    //     exit(1);
-    // }
-
-    // unsigned char KnownText[8];
-
-    // for(int i=0;i<8;i++){
-    //     char x= fgetc(text);
-    //     KnownText[i]=x;
-    // }
-
-    // fseek(text, 0, SEEK_SET);
-    // fclose(text);
-
-    // ecb_encrypt(64,key, inFile, outFile, "2des");
 
     FILE *entext = fopen(inFile, "rb");
 
@@ -115,7 +96,9 @@ void MITM(char* inFile, char* KnownText, char* outFile , int mode, char* iv)
         int l=0, r=keyspace-1;
         
         while(l<=r){
+
             long long mid= l +(r-l)/2;
+            
             if (givesKey2[mid].X==x) {
                 k2=givesKey2[mid].key;
                 k1=givesKey1[i].key;
@@ -123,21 +106,31 @@ void MITM(char* inFile, char* KnownText, char* outFile , int mode, char* iv)
 
                 int guessedKey1[64]={0};
                 int guessedKey2[64]={0};
+
                 for(int i=keybits-1; i >= 0; i-- ){
                     guessedKey1[i]=k1&1;
-                    k1 >>= 1;
+                    k1>>=1;
                 }
+
                 for(int i=keybits-1; i>=0;i-- ){
                     guessedKey2[i]=k2&1;
                     k2>>=1;
                 }
+
                 unsigned char cmp[8];
                 _2DES_Decrypt(firstCipherBlock,guessedKey1, guessedKey2, cmp);
                 if(memcmp(cmp, KnownText, 8)==0) { 
-                    printf("Found both keys"); endl 
+                    printf("Found both keys, decrypting now"); endl
+                    printf("The total key was "); 
                     found=1;  
+
                     for(int j=0;j<64;j++) finalGuessedKey[j]=guessedKey1[j];
                     for(int j=0;j<64;j++) finalGuessedKey[64+j]=guessedKey2[j];
+                    
+                    char finalHexKey[257];
+                    bitstoHex(finalGuessedKey, finalHexKey, 128);
+
+                    printf("%s", finalHexKey);endl
                 }
                 else {printf("Error"); endl}
                 break;
@@ -149,10 +142,15 @@ void MITM(char* inFile, char* KnownText, char* outFile , int mode, char* iv)
                 l=mid+1;
             }
         }
+
         if(found==1){
             break;
         }
+
     }
+
+    free(givesKey1);
+    free(givesKey2);
 
     if(mode==1){
         ecb_decrypt(64, finalGuessedKey, inFile, outFile, "2des");

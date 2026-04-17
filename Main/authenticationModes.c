@@ -365,5 +365,5 @@ void gcm_decrypt(int* intKey, char* infilename, unsigned char* iv, unsigned char
     free(ciphertext);
     fclose(output);
     fclose(text);
-
+    
 }

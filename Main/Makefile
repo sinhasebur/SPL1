@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Wall -Wextra
+CFLAGS := -Wall -Wextra -O3
 LDFLAGS := -lm
 
 TARGET := cryptool

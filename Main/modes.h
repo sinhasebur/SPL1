@@ -1,6 +1,6 @@
 #ifndef MODES_H
 #define MODES_H
-
+#include <stdio.h>
 
 
 void Xor(unsigned char *output, unsigned char* other, int n);

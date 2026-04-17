@@ -15,7 +15,6 @@
 
 #define endl printf("\n");
 
-#define default 0;
 
 //encryptions
 #define DES 1 
@@ -55,6 +54,8 @@ struct values{
 
     unsigned char knownPT[65];
     int knownPTlocation; //0 is not known, 1 is specific, 2 is to read manually
+
+    int byteNumber;
 } command;
 
 
@@ -65,16 +66,15 @@ int commandType(char* x);
 int writeCommand(int comm, struct values* command, char* x);
 void checkValidity(struct values* command);
 void execute (struct values* command);
-void printInfo(struct values* command);
+void printInfo(struct values* command, double time);
 
 
 
 int main(int argc , char* argv[]){
     
     clock_t start, end;
-    start = clock();
+    start= clock();
 
-    
     setDefaultValues(&command);
 
     parse(&command, argc, argv);
@@ -82,14 +82,12 @@ int main(int argc , char* argv[]){
 
     execute(&command);
 
-    printInfo(&command);
-    
-
     end = clock();
-    double time_taken = (double)(end - start) / (double)(CLOCKS_PER_SEC);
+    double time_taken = (double)(end-start)/ (double)(CLOCKS_PER_SEC);
 
     endl;
-    printf("Time taken is: %f sec.", time_taken); endl;
+    printInfo(&command, time_taken);
+    //printf("Time taken is: %f sec.", time_taken); endl;
 }
 
 
@@ -117,7 +115,7 @@ int writeCommand(int comm, struct values* command, char* x){
     //printf(" %s",x); endl;
 
     
-    if( (comm==0)){ //enc 1,  decrypt 2 , attack 5
+    if( (comm==0)){ //enc 1,  decrypt 2 , attack 5, bench 10, inspect 11
         
         if(command->task!=-1){ 
             printError("Multiple Functions given at once");
@@ -137,6 +135,9 @@ int writeCommand(int comm, struct values* command, char* x){
             else if (!strcmp(x, "inspect")) {
                 command->task=11;
             }
+            else if(!strcmp(x,"bench")){
+                command->task=10;
+            }
             else{
                 printError("Incorrect Function given");
             }
@@ -153,7 +154,7 @@ int writeCommand(int comm, struct values* command, char* x){
     }
     else if(comm==3){ //input
         command->inputfilename=x;
-        
+        command->byteNumber=-1;    
     }
     else if(comm==4){ // output
         command->outputfilename=x;
@@ -244,9 +245,11 @@ int writeCommand(int comm, struct values* command, char* x){
             printf("Incorrect use of attack");
         }
         
-        if(!strcmp(x, "patternLeak") || !strcmp(x, "pl") || !strcmp(x, "PL")){ command->attackType=1; } 
-        else if(!strcmp(x, "knownPlaintextAttack") || !strcmp(x, "KPTA") || !strcmp(x, "kpta")) { 
+        if(!strcmp(x, "patternLeak") || !strcmp(x, "pl") || !strcmp(x, "PL")){ 
             command->attackType=PatternLeak; 
+        } 
+        else if(!strcmp(x, "knownPlaintextAttack") || !strcmp(x, "KPTA") || !strcmp(x, "kpta")) { 
+            command->attackType=KPTA; 
             //command->encryp=DES; 
         }
         else if(!strcmp(x, "meetInTheMiddle") || !strcmp(x, "MITM") || !strcmp(x, "mitm")) {
@@ -289,6 +292,8 @@ void parse(struct values* command, int argc , char* argv[]){
     
     int comm;
     
+    if(argc<=1) printError("Incomplete Command");
+
     writeCommand(0, command, argv[1]);
 
     for(int i=2; i<argc; i=i+2){
@@ -298,7 +303,6 @@ void parse(struct values* command, int argc , char* argv[]){
             if(!writeCommand(comm, command, argv[i+1])){
                 printError("Error reading command");
             }
-        
         }
         else{
             printError("Incorrect flag use");
@@ -311,7 +315,7 @@ int commandType(char* x){
     //printf("%s",x);
 
     if(!strcmp(x, "-alg") || !strcmp(x, "-algo")) return 1;
-    if(!strcmp(x, "-dec")) return 2;
+    
     if(!strcmp(x, "-in")) return 3;
     if(!strcmp(x, "-out")) return 4;
     if(!strcmp(x,"-attack")) return 5;
@@ -338,7 +342,7 @@ void setDefaultValues(struct values* command){
     command->outputfilename=out;
 
     
-    int defaultkey[196]={1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1};
+    int defaultkey[192]={1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1};
     memcpy(command->key,defaultkey,192*sizeof(int));
 
     command->keybits=-1;
@@ -350,6 +354,7 @@ void setDefaultValues(struct values* command){
     command->keyState=0; command->ivState=0;
 
     command->knownPTlocation=0;
+    command->byteNumber=0;
 }
 
 
@@ -435,9 +440,31 @@ void checkValidity (struct values* command){
                 printError("MITM attack in only for 2des");
             }
 
-            // if(command->key!=-1){
-            //     printError("This attack does not require Knowing the key");
-            // }
+            if(command->keyState!=0){
+                printError("This attack does not require Knowing the key");
+            }
+
+            if(command->mode==-1){
+                printError("Please have mode defined");
+            }
+
+            if(command->mode!=ecb && command->ivState==0){
+                printf("Modes other than ECB require iv, using default");
+            }
+            
+        }
+
+        if(command->attackType==KPTA){
+            if(command->encryp==-1){
+                command->encryp=DES;
+            }
+            else if(command->encryp!=DES){
+                printError("kpta direct attack only works for des");
+            }
+
+            if(command->keyState!=0){
+                printError("This attack does not require Knowing the key");
+            }
 
             if(command->mode==-1){
                 printError("Please have mode defined");
@@ -446,6 +473,10 @@ void checkValidity (struct values* command){
             if(command->mode!=ecb && command->iv==0){
                 printf("Modes other than ECB require iv, using default");
             }
+
+            if(command->knownPTlocation==0){
+                printError("Please provide known plaintext");
+            }
             
         }
     }
@@ -453,7 +484,7 @@ void checkValidity (struct values* command){
 
     if(command->task==11){
         if(command->knownPTlocation==10){
-            if(command->inputfilename=="input"){
+            if(!strcmp(command->inputfilename, "input")){
                 printf("No input given, looking for \"input\" file");
             }
         }
@@ -464,8 +495,11 @@ void checkValidity (struct values* command){
             printError("GCM is only for AES");
         }
     }
-}
 
+    if(command->byteNumber==-1){
+        command->byteNumber=countBytes(command->inputfilename);
+    }
+}
 
 
 void execute(struct values* command){
@@ -473,7 +507,12 @@ void execute(struct values* command){
     int block=getBlockSize(command->encryp);
     char* encr= encNumber(command->encryp);
     
-    if(command->task==1){ //encrypt
+    if(command->task==10){
+        benchmark(command->key, command->iv, command->inputfilename, "results.csv");
+        printf("Results written in results.csv file");
+        //exit(0);
+    }
+    else if(command->task==1){ //encrypt
         if(command->mode==ecb) {ecb_encrypt(block, command->key, command->inputfilename,command->outputfilename, encr);}
         else if(command->mode==cbc){ cbc_encrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
         else if(command->mode==ofb){ ofb_encrypt(block, command->key, command->inputfilename,command->outputfilename, command->iv, encr);}
@@ -494,11 +533,14 @@ void execute(struct values* command){
         }
     }
     else if(command->task==5){
-        if(command->attackType==1) {
+        if(command->attackType==PatternLeak) {
             patternLeak(command->key, command->inputfilename, command->outputfilename,command->mode, command->iv,command->encryp);
         }
-        if(command->attackType==MeetInTheMiddle){
+        else if(command->attackType==MeetInTheMiddle){
             MITM(command->inputfilename, command->knownPT, command->outputfilename, command->mode, command->iv);
+        }
+        else if(command->attackType==KPTA){
+            deskpta(command->knownPT, command->inputfilename, command->outputfilename, command->mode, command->iv);
         }
 
     }
@@ -514,17 +556,23 @@ void execute(struct values* command){
             }else{
                 printf("Could not get input file %s",command->inputfilename);
             }
-            fclose(r);
 
             char hexpt[129];
             bytetoHex(pt,hexpt,64);
             endl
             printf("%s",hexpt ); endl
+            fclose(r);
         }
+    }
+
+    else{
+        printError("No task assigned");
     }
 }
 
-void printInfo(struct values* command){
+void printInfo(struct values* command, double time_taken){
+    
+    printf("                    RESULTS"); endl
     if(command->keyState==1 && (command->task==1 ||command->task==2) ){
         printf("Used key is : ");
         char hex[193];
@@ -539,7 +587,7 @@ void printInfo(struct values* command){
 
     }
 
-    if( 1 |(command->ivState==1 && (command->task==1 ||command->task==2)) ){
+    if( (command->ivState==1 && (command->task==1 ||command->task==2)) ){
         printf("Used iv is : "); 
         char hex[33];
         bytetoHex(command->iv,hex,((command->ivbits)+7)/8);
@@ -560,6 +608,13 @@ void printInfo(struct values* command){
         //printf("%s",hexTag);
         endl
         printf("Authentication Tag is : %s", hexTag);endl
+    }
+
+    endl printf("                                     TIME AND SPEED"); endl
+    printf("Time taken is: %f sec.", time_taken); endl;
+
+    if(command->byteNumber!=0){
+        printf("Throughput is %f MB/sec.\n",command->byteNumber / (1000*1000*time_taken) );
     }
 }
 

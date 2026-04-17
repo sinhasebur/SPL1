@@ -4,9 +4,14 @@
 #include "2des.h"
 #include "3des.h"
 #include "aes.h"
+#include "modes.h"
+#include "authenticationModes.h"
+
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+void writeInCSV(FILE* csv, char* algo, char* mode, char* oper, clock_t start,clock_t end, int size);
 
 void encrypt(unsigned char* text, int* key, unsigned char* cipherText, char* encryptiontype)
 {
@@ -133,4 +138,299 @@ char * encNumber(int i){
 int getBlockSize(int i){
     if(i==4) return 128;
     else return 64;
+}
+
+int countBytes(char* inFilename){
+    FILE* f= fopen(inFilename, "rb");
+    int x,n=0;
+    while((x=fgetc(f))!=EOF){
+        n++;
+    }
+    return n;
+}
+
+
+void benchmark(int* key, unsigned char* iv, char* inFilename, char* outFilename) {
+
+
+    FILE* csv= fopen(outFilename, "wb");
+
+    char* headers="Algo,Mode,Operation,Time(Sec),Throughput(MB/sec)\n";
+    fwrite(headers, sizeof(char), strlen(headers), csv);
+
+    int size=countBytes(inFilename);
+    if(size==0){
+        printf("Input file empty"); exit(1);
+    }
+    double time=0;
+
+    clock_t start, end;
+    
+    //ecb 
+
+    //des
+    start=clock();
+    ecb_encrypt(64,key,inFilename, "output", "des");
+    end=clock();
+    time= (double)(end-start)/(double)(CLOCKS_PER_SEC);
+    writeInCSV(csv,"DES","ECB","Encrypt", start,end, size);
+
+    start=clock();
+    ecb_decrypt(64,key,"output", "del", "des");
+    end=clock();
+    time= (double)(end-start)/(double)(CLOCKS_PER_SEC);
+    writeInCSV(csv,"DES","ECB","Decrypt", start,end, size);
+
+    //2des
+    start=clock();
+    ecb_encrypt(64,key,inFilename, "output", "2des");
+    end=clock();
+    writeInCSV(csv,"2DES","ECB","Encrypt", start, end, size);
+
+    start=clock();
+    ecb_decrypt(64,key,"output", "del", "2des");
+    end=clock();
+    writeInCSV(csv,"2DES","ECB","Decrypt", start, end, size);
+
+    //3des
+    start=clock();
+    ecb_encrypt(64,key,inFilename, "output", "3des");
+    end=clock();
+    writeInCSV(csv,"3DES","ECB","Encrypt", start, end, size);
+
+    start=clock();
+    ecb_decrypt(64,key,"output", "del", "3des");
+    end=clock();
+    writeInCSV(csv,"3DES","ECB","Decrypt", start, end, size);
+    
+    
+    //AES
+    start=clock();
+    ecb_encrypt(128,key,inFilename, "output", "aes");
+    end=clock();
+    writeInCSV(csv,"AES","ECB","Encrypt", start, end, size);
+
+    start=clock();
+    ecb_decrypt(128,key,"output", "del", "aes");
+    end=clock();
+    writeInCSV(csv,"AES","ECB","Decrypt", start, end, size);
+
+
+
+    //cbc
+
+    //des
+    start=clock();
+    cbc_encrypt(64,key,inFilename, "output", iv,"des");
+    end=clock();
+    time= (double)(end-start)/(double)(CLOCKS_PER_SEC);
+    writeInCSV(csv,"DES","CBC","Encrypt", start,end, size);
+
+    start=clock();
+    cbc_decrypt(64,key,"output","del",iv, "des");
+    end=clock();
+    time= (double)(end-start)/(double)(CLOCKS_PER_SEC);
+    writeInCSV(csv,"DES","CBC","Decrypt", start,end, size);
+
+    //2des
+
+    start=clock();
+    cbc_encrypt(64,key,inFilename, "output",iv, "2des");
+    end=clock();
+    writeInCSV(csv,"2DES","CBC","Encrypt", start, end, size);
+
+    start=clock();
+    cbc_decrypt(64,key, "output","del", iv, "2des");
+    end=clock();
+    writeInCSV(csv,"2DES","CBC","Decrypt", start, end, size);
+
+    //3des
+    start=clock();
+    cbc_encrypt(64,key,inFilename, "output",iv, "3des");
+    end=clock();
+    writeInCSV(csv,"3DES","CBC","Encrypt", start, end, size);
+
+    start=clock();
+    cbc_decrypt(64,key,"output","del",iv, "3des");
+    end=clock();
+    writeInCSV(csv,"3DES","CBC","Decrypt", start, end, size);
+
+    //AES
+    start=clock();
+    cbc_encrypt(128,key,inFilename, "output",iv, "aes");
+    end=clock();
+    writeInCSV(csv,"AES","CBC","Encrypt", start, end, size);
+
+    start=clock();
+    cbc_decrypt(128,key,"output","del", iv, "aes");
+    end=clock();
+    writeInCSV(csv,"AES","CBC","Decrypt", start, end, size);
+
+        //des
+    start=clock();
+    cfb_encrypt(64,key,inFilename, "output", iv,"des");
+    end=clock();
+    time= (double)(end-start)/(double)(CLOCKS_PER_SEC);
+    writeInCSV(csv,"DES","CFB","Encrypt", start,end, size);
+
+    start=clock();
+    cfb_decrypt(64,key,"output","del",iv, "des");
+    end=clock();
+    time= (double)(end-start)/(double)(CLOCKS_PER_SEC);
+    writeInCSV(csv,"DES","CFB","Decrypt", start,end, size);
+
+    //2des
+
+    start=clock();
+    cfb_encrypt(64,key,inFilename, "output",iv, "2des");
+    end=clock();
+    writeInCSV(csv,"2DES","CFB","Encrypt", start, end, size);
+
+    start=clock();
+    cfb_decrypt(64,key, "output","del", iv, "2des");
+    end=clock();
+    writeInCSV(csv,"2DES","CFB","Decrypt", start, end, size);
+
+    //3des
+    start=clock();
+    cfb_encrypt(64,key,inFilename, "output",iv, "3des");
+    end=clock();
+    writeInCSV(csv,"3DES","CFB","Encrypt", start, end, size);
+
+    start=clock();
+    cfb_decrypt(64,key, "output","del", iv, "3des");
+    end=clock();
+    writeInCSV(csv,"3DES","CFB","Decrypt", start, end, size);
+
+    //AES
+    start=clock();
+    cfb_encrypt(128,key,inFilename, "output",iv, "aes");
+    end=clock();
+    writeInCSV(csv,"AES","CFB","Encrypt", start, end, size);
+
+    start=clock();
+    cfb_decrypt(128,key,"output","del", iv, "aes");
+    end=clock();
+    writeInCSV(csv,"AES","CFB","Decrypt", start, end, size);
+
+
+        //des
+    start=clock();
+    ofb_encrypt(64,key,inFilename, "output", iv,"des");
+    end=clock();
+    time= (double)(end-start)/(double)(CLOCKS_PER_SEC);
+    writeInCSV(csv,"DES","OFB","Encrypt", start,end, size);
+
+    start=clock();
+    ofb_decrypt(64,key,"output","del",iv, "des");
+    end=clock();
+    time= (double)(end-start)/(double)(CLOCKS_PER_SEC);
+    writeInCSV(csv,"DES","OFB","Decrypt", start,end, size);
+
+    //2des
+
+    start=clock();
+    ofb_encrypt(64,key,inFilename, "output",iv, "2des");
+    end=clock();
+    writeInCSV(csv,"2DES","OFB","Encrypt", start, end, size);
+
+    start=clock();
+    ofb_decrypt(64,key, "output","del", iv, "2des");
+    end=clock();
+    writeInCSV(csv,"2DES","OFB","Decrypt", start, end, size);
+
+    //3des
+    start=clock();
+    ofb_encrypt(64,key,inFilename, "output",iv, "3des");
+    end=clock();
+    writeInCSV(csv,"3DES","OFB","Encrypt", start, end, size);
+
+    start=clock();
+    ofb_decrypt(64,key, "output","del",iv, "3des");
+    end=clock();
+    writeInCSV(csv,"3DES","OFB","Decrypt", start, end, size);
+
+    //AES
+    start=clock();
+    ofb_encrypt(128,key,inFilename, "output",iv, "aes");
+    end=clock();
+    writeInCSV(csv,"AES","OFB","Encrypt", start, end, size);
+
+    start=clock();
+    ofb_decrypt(128,key,"output","del", iv, "aes");
+    end=clock();
+    writeInCSV(csv,"AES","OFB","Decrypt", start, end, size);
+
+    //des
+    start=clock();
+    counter_encrypt(64,key,inFilename, "output", iv,"des");
+    end=clock();
+    time= (double)(end-start)/(double)(CLOCKS_PER_SEC);
+    writeInCSV(csv,"DES","Counter","Encrypt", start,end, size);
+
+    start=clock();
+    counter_decrypt(64,key,"output","del",iv, "des");
+    end=clock();
+    time= (double)(end-start)/(double)(CLOCKS_PER_SEC);
+    writeInCSV(csv,"DES","Counter","Decrypt", start,end, size);
+
+    //2des
+
+    start=clock();
+    counter_encrypt(64,key,inFilename, "output",iv, "2des");
+    end=clock();
+    writeInCSV(csv,"2DES","Counter","Encrypt", start, end, size);
+
+    start=clock();
+    counter_decrypt(64,key, "output","del", iv, "2des");
+    end=clock();
+    writeInCSV(csv,"2DES","Counter","Decrypt", start, end, size);
+
+    //3des
+    start=clock();
+    counter_encrypt(64,key,inFilename, "output",iv, "3des");
+    end=clock();
+    writeInCSV(csv,"3DES","Counter","Encrypt", start, end, size);
+
+    start=clock();
+    counter_decrypt(64,key, "output","del",iv, "3des");
+    end=clock();
+    writeInCSV(csv,"3DES","Counter","Decrypt", start, end, size);
+
+    //AES
+    start=clock();
+    counter_encrypt(128,key,inFilename, "output",iv, "aes");
+    end=clock();
+    writeInCSV(csv,"AES","Counter","Encrypt", start, end, size);
+
+    start=clock();
+    counter_decrypt(128,key,"output","del", iv, "aes");
+    end=clock();
+    writeInCSV(csv,"AES","Counter","Decrypt", start, end, size);
+
+
+    //gcm
+    char tag[128];
+    start=clock();
+    gcm_encrypt(key,inFilename, iv, "output",tag);
+    end=clock();
+    writeInCSV(csv,"AES","GCM","Encrypt", start, end, size);
+
+    start=clock();
+    gcm_decrypt(key, "output",iv, "del",tag);
+    end=clock();
+    writeInCSV(csv,"AES","GCM","Decrypt", start, end, size);
+
+
+
+    fclose(csv);
+    remove("output");
+    remove("delete");
+}
+
+
+void writeInCSV(FILE* csv, char* algo, char* mode, char* oper, clock_t start,clock_t end, int size){
+    double time= (double)(end-start)/(double)(CLOCKS_PER_SEC);
+    fprintf(csv,"%s,%s,%s,%f,%f\n",algo, mode, oper, time, size/(time*1000*1000));
+    printf("%s %s %s took %f sec at %f MB/s\n", algo, mode, oper, time, size/(time*1000*1000));
 }

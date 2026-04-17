@@ -320,6 +320,7 @@ void cfb_encrypt( int blockSize, int* key, char* infilename,char* outfilename,  
     unsigned char discard[bytes-1];
     unsigned char select;
     while((i=fgetc(text))!=EOF){
+        encrypt(outText, key, outText, encryptionType);
         select=outText[0];
         //memcpy(discard, outText[1],sizeof(unsigned char)*(bytes-1) );
         for(int i=1;i<bytes;i++) discard[i-1]=outText[i];
@@ -363,6 +364,7 @@ void cfb_decrypt( int blockSize, int* key, char* infilename,char* outfilename,  
     unsigned char discard[bytes-1];
     unsigned char select;
     while((i=fgetc(ciphertext))!=EOF){
+        encrypt(outText, key, outText, encryptionType);
         select=outText[0];
         //memcpy(discard, outText[1],sizeof(unsigned char)*(bytes-1) );
         for(int i=1;i<bytes;i++) discard[i-1]=outText[i];
