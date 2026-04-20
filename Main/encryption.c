@@ -6,10 +6,12 @@
 #include "aes.h"
 #include "modes.h"
 #include "authenticationModes.h"
+#include "conversions.h"
 
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 
 void writeInCSV(FILE* csv, char* algo, char* mode, char* oper, clock_t start,clock_t end, int size);
 
@@ -19,8 +21,17 @@ void encrypt(unsigned char* text, int* key, unsigned char* cipherText, char* enc
 
     switch(type){
         case 1:// des
-        {
-            DES_Encrypt(text, key, cipherText);
+        {   static int keysM[16][48];
+            static int desStateEn=0;
+            if(desStateEn==0){
+                getKeys(key,keysM[0]);
+                //AESencryptFaster(text,cipherText, AESkey, 10,expandedKey);
+                DES_EncryptFaster(text, key, cipherText,keysM);
+                desStateEn=1;
+            }
+            else{
+                DES_EncryptFaster(text, key, cipherText,keysM);
+            }
             break;
         }
         case 2:
@@ -42,20 +53,22 @@ void encrypt(unsigned char* text, int* key, unsigned char* cipherText, char* enc
         }
         case 4:{
         
-            unsigned char AESkey[16];
-            int k=0;
-            for(int i=0;i<16;i++){
-                unsigned char u=0;
-                for(int j=0;j<8;j++){
-                    if(key[k]==1){
-                        u|=(1LL<<(7-j));
-                    }
-                    k++;
-                }
-                AESkey[i]=u;
+            static unsigned char AESkey[16];
+            static int aesStateEn=0;
+            static unsigned char expandedKey[176];
+
+            if(aesStateEn==0){
+                char hexKey[33];bitstoHex(key,hexKey,128);
+                hextoBytes(hexKey,AESkey);
+
+                //AESencrypt(text,cipherText, AESkey,10, expandedKey);
+                keyExpansion(AESkey,expandedKey);
+                aesStateEn=1;
+                AESencryptFaster(text,cipherText, AESkey, 10,expandedKey);
             }
-            
-            AESencrypt(text,cipherText, AESkey,10);
+            else{
+                AESencryptFaster(text,cipherText, AESkey, 10,expandedKey);
+            }
             break;
         }
 
@@ -70,7 +83,17 @@ void decrypt(unsigned char* cipherText, int* key, unsigned char* resultText,  ch
 
     switch(type){
         case 1:
-            DES_Decrypt(cipherText, key, resultText);
+            static int dkeysM[16][48];
+            static int desStateDec=0;
+            if(desStateDec==0){
+                getKeys(key,dkeysM[0]);
+                //AESencryptFaster(text,cipherText, AESkey, 10,expandedKey);
+                DES_DecryptFaster(cipherText, key, cipherText,dkeysM);
+                desStateDec=1;
+            }
+            else{
+                DES_DecryptFaster(cipherText, key, cipherText,dkeysM);
+            }
             break;
         case 2:
         {
@@ -90,21 +113,25 @@ void decrypt(unsigned char* cipherText, int* key, unsigned char* resultText,  ch
             break;
         }
         case 4:{
-            unsigned char AESkey[16];
-            int k=0;
-            for(int i=0;i<16;i++){
-                unsigned char u=0;
-                for(int j=0;j<8;j++){
-                    if(key[k]==1){
-                        u|=(1LL<<(7-j));
-                    }
-                    k++;
-                }
-                AESkey[i]=u;
+            static unsigned char AESkeyd[16];
+            static int aesStateDec=0;
+            static unsigned char expandedKeyDec[176];
+
+            if(aesStateDec==0){
+                char hexKey[33];bitstoHex(key,hexKey,128);
+                hextoBytes(hexKey,AESkeyd);
+
+                //AESencrypt(text,cipherText, AESkey,10, expandedKey);
+                keyExpansion(AESkeyd,expandedKeyDec);
+                aesStateDec=1;
+                AESdecryptFaster(cipherText,resultText, AESkeyd, 10,expandedKeyDec);
             }
-            
-            AESdecrypt(cipherText,resultText,AESkey,10);
+            else{
+                AESdecryptFaster(cipherText,resultText, AESkeyd, 10,expandedKeyDec);
+            }
             break;
+
+
         }
 
     }
@@ -140,15 +167,29 @@ int getBlockSize(int i){
     else return 64;
 }
 
-int countBytes(char* inFilename){
+long long countBytes(char* inFilename){
     FILE* f= fopen(inFilename, "rb");
-    int x,n=0;
-    while((x=fgetc(f))!=EOF){
-        n++;
-    }
+    // int x,n=0;
+    // while((x=fgetc(f))!=EOF){
+    //     n++;
+    // }
+    fseek(f,0,SEEK_END);
+    long long n=ftell(f);
+    fclose(f);
     return n;
 }
 
+long long countBytesFile(FILE* x){
+    //FILE* f= fopen(inFilename, "rb");
+    // int x,n=0;
+    // while((x=fgetc(f))!=EOF){
+    //     n++;
+    // }
+    fseek(x,0,SEEK_END);
+    long long n=ftell(x);
+    fseek(x,0,SEEK_SET);
+    return n;
+}
 
 void benchmark(int* key, unsigned char* iv, char* inFilename, char* outFilename) {
 

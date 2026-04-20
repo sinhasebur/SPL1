@@ -19,6 +19,41 @@ void DES_Decrypt(unsigned char* x, int * key,unsigned  char* y)
         memcpy(rtemp,r, 4*sizeof(unsigned char));
         memcpy(ltemp,l, 4*sizeof(unsigned char));
 
+        mangler(l,keys[i]);
+        xOr(rtemp,l);
+
+        memcpy(r,ltemp,4*sizeof(unsigned char));
+
+    }
+
+    unsigned char decipherText[8];
+    for(int i=0;i<4; i++) decipherText[i]=r[i];
+    for(int i=0;i<4; i++) decipherText[4+i]=l[i];
+
+    for(int i=0; i<8; i++) {
+        y[i]=decipherText[i];
+    }
+}
+
+
+
+void DES_DecryptFaster(unsigned char* x, int * key,unsigned  char* y, int keys[16][48])
+{
+
+    unsigned char l[4],r[4];
+    unsigned char cipherText[8];
+
+    for(int i=0;i<8;i++) cipherText[i]=x[i];
+    for(int i=0;i<4; i++) l[i]=cipherText[i];
+    for(int i=0;i<4; i++) r[i]=cipherText[4+i];
+
+    // int keys[16][48];
+    // getKeys(key, keys[0]);
+
+    for(int i=15;i>=0;i--){
+        unsigned char rtemp[4],ltemp[4];
+        memcpy(rtemp,r, 4*sizeof(unsigned char));
+        memcpy(ltemp,l, 4*sizeof(unsigned char));
 
         mangler(l,keys[i]);
         xOr(rtemp,l);
@@ -40,6 +75,47 @@ void DES_Decrypt(unsigned char* x, int * key,unsigned  char* y)
 
 
 
+void DES_EncryptFaster(unsigned char *x, int *y, unsigned char *z, int keys[16][48])
+{
+
+    unsigned char plainText[9];
+    for(int i=0;i<8;i++){plainText[i]=x[i];}
+
+    int key[64];
+    for(int i=0;i<64;i++){key[i]=y[i];}
+
+    swapBits(plainText);
+
+    unsigned char l[4] = {plainText[0], plainText[1], plainText[2], plainText[3]};
+    unsigned char r[4] = {plainText[4], plainText[5], plainText[6], plainText[7]};
+
+    //int keys[16][48];
+    //getKeys(key, keys[0]);
+
+    for (int i = 0; i < 16; i++) {
+
+        unsigned char rtemp[4], ltemp[4];
+        memcpy(rtemp, r, 4 * sizeof(unsigned char));
+        memcpy(ltemp, l, 4 * sizeof(unsigned char));
+
+
+        mangler(r, keys[i]); // changes r
+
+
+        xOr(ltemp, r); // this func puts xOred value in r
+        memcpy(l, rtemp, 4 * sizeof(unsigned char));
+    }
+
+
+    unsigned char cipherText[8];
+    for(int i=0;i<4; i++) cipherText[i]=l[i];
+    for(int i=0;i<4; i++) cipherText[4+i]=r[i];
+
+    for(int i=0; i<8; i++) {
+        z[i]=cipherText[i];
+    }
+
+}
 
 void DES_Encrypt(unsigned char *x, int *y, unsigned char *z)
 {
@@ -82,8 +158,6 @@ void DES_Encrypt(unsigned char *x, int *y, unsigned char *z)
     }
 
 }
-
-
 
 
 

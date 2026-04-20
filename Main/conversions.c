@@ -45,7 +45,6 @@ void hextoBits(const char* hex,int* bits) {
         else{
             value=10+(byte-'a');
         }
-
         for(int j=0;j<4;j++){
             bits[4*i+j]= (value >> (3-j))&1;
         }

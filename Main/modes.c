@@ -9,41 +9,28 @@
 
 
 
-
 int pkcs7_Pad(int blockSize,FILE* text , unsigned char** textstream)
 {
     int bytes=blockSize/8;
     long long n=0;
     unsigned char x;
-    int i;
 
-    while((i=fgetc(text))!=EOF){
-        n++;
-    }
+    n=countBytesFile(text);
     
-    fseek(text, 0, SEEK_SET);
 
     long long blockNum= n/bytes;
-    long long allocate= ((blockNum+1)*bytes);
+    long long allocate=((blockNum+1)*bytes);
     int excess=n%bytes;
 
     (*textstream)= malloc(allocate);
 
-    for(int i=0; i<n - excess; i++){
-        x=fgetc(text);
-        if(x==EOF) break;
-        else (*textstream)[i]=x;
-    }
+    fread(*textstream,sizeof(char),n,text);
 
-    for(int i=0;i<bytes;i++){
+    int padNumber=bytes-excess;
+    if(excess==0) padNumber=bytes;
 
-        if(i<excess){
-            x=fgetc(text);
-            (*textstream)[blockNum*bytes+i]=x;
-        }
-        else{
-            (*textstream)[blockNum*bytes+i]=bytes-excess;
-        }
+    for(int i=0;i<padNumber;i++){
+        (*textstream)[n+i]=padNumber;
     }
 
     blockNum++;
@@ -53,18 +40,28 @@ int pkcs7_Pad(int blockSize,FILE* text , unsigned char** textstream)
 
 void pkcs7_remove_Pad(int blockSize,FILE* decrypted,unsigned char** outstream , int size)
 {
-    int padded= (*outstream)[size];
+    int padNumber= (*outstream)[size];
 
     int bytes=blockSize/8;
 
-    if (padded <= 0 || padded >bytes ) {
-        padded= 0;
-        printf("Padding error\n");
+    if (padNumber <= 0 || padNumber >bytes ) {
+        padNumber= 0;
+        printf("Padding error\n");endl
+        return;
+    }
+    else{
+        for(int i=size,j=0;j<padNumber;i--,j++){
+            if((*outstream)[i]!=padNumber){
+                printf("Pad not aligned");endl
+                return;
+            }
+        }
     }
 
-    for(int i=0; i<size-padded; i++){
-        fputc((*outstream)[i],decrypted);
-    }
+    // for(int i=0; i<size-padded; i++){
+    //     fputc((*outstream)[i],decrypted);
+    // }
+    fwrite(*outstream, sizeof(char),size-padNumber, decrypted);
 }
 
 
@@ -97,9 +94,10 @@ void ecb_encrypt(int blockSize,  int* key, char* infilename, char* outfilename, 
 
     FILE *cipher  = fopen(outfilename, "wb");
 
-    for(int i=0; i<allocate ; i++){
-        fputc(cipherTextStream[i],cipher);
-    }
+    // for(int i=0; i<allocate ; i++){
+    //     fputc(cipherTextStream[i],cipher);
+    // }
+    fwrite(cipherTextStream, sizeof(char),allocate, cipher);
 
     fclose(text);
     fclose(cipher);
@@ -122,13 +120,8 @@ void ecb_decrypt(int blockSize, int* key, char* infilename , char* outfilename ,
 
     long long n=0;
     unsigned char x;
-    int i;
-
-    while((i=fgetc(text))!=EOF){
-        n++;
-    }
-
-    fseek(text, 0, SEEK_SET);
+    
+    n=countBytes(infilename);
 
 
     long long blockNum= n/bytes;
@@ -137,15 +130,17 @@ void ecb_decrypt(int blockSize, int* key, char* infilename , char* outfilename ,
 
     unsigned char* textstream= malloc(allocate);
 
-    for(int i=0; i<n ; i++){
-        x=fgetc(text);
-        if(x==EOF){
-            printf("encrypted file reading error, Check encrpytion"); endl
-            break;
-        }
-        else
-            textstream[i]=x;
-    }
+    // for(int i=0; i<n ; i++){
+    //     x=fgetc(text);
+    //     if(x==EOF){
+    //         printf("encrypted file reading error, Check encrpytion"); endl
+    //         break;
+    //     }
+    //     else
+    //         textstream[i]=x;
+    // }
+
+    fread(textstream,sizeof(char),n, text);
 
     unsigned char* out= malloc(sizeof(unsigned char) * n);
 
@@ -164,8 +159,6 @@ void ecb_decrypt(int blockSize, int* key, char* infilename , char* outfilename ,
     free(out);
 
 }
-
-
 
 
 

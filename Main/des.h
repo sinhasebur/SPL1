@@ -11,8 +11,12 @@ int binToInt(int data);
 void pbox(int* data);
 void int32bitstoChar(int* data,unsigned  char* returnchar);
 void xOr(unsigned char * x, unsigned  char* y);
+
 void DES_Encrypt(unsigned  char* plaintext ,int* key,unsigned  char* cipherText);
+void DES_EncryptFaster(unsigned  char* plaintext ,int* key,unsigned  char* cipherText, int keys[16][48]);
 void DES_Decrypt(unsigned char* cipherText, int* key,unsigned  char* decryptedText);
+void DES_DecryptFaster(unsigned  char* plaintext ,int* key,unsigned  char* cipherText, int keys[16][48]);
+
 void permutedChoice1(int *x, int *y);
 void permutedChoice2(int *x, int *y);
 void leftCircularShift(int *x);

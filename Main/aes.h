@@ -2,6 +2,10 @@
 #define AES_H
 
 void AESencrypt(unsigned char* plainText,unsigned char* cipherText, unsigned char*  key, int rounds);
+void AESencryptFaster(unsigned char* plainText, unsigned char* cipherText, unsigned char*  key, int rounds, unsigned char* expandedKey);
+void AESdecryptFaster(unsigned char* cipherText,unsigned char* resultText, unsigned char*  key, int rounds, unsigned char* expandedKey);
+
+
 void leftCircularShiftWord(unsigned char word[4]);
 void subWord(unsigned char word[4]);
 void keyExpansion(unsigned char key[16], unsigned char expandedKey[176]);

@@ -26,7 +26,37 @@ void AESencrypt(unsigned char* plainText, unsigned char* cipherText, unsigned ch
         addRoundKey(plainText, expandedKey+(rounds)*16);
 
     memcpy(cipherText, plainText, sizeof(char)*16);
+
+    
 }
+
+void AESencryptFaster(unsigned char* plainText, unsigned char* cipherText, unsigned char*  key, int rounds, unsigned char* expandedKey){
+
+    //unsigned char expandedKey[176];
+    //keyExpansion(key, expandedKey);
+    addRoundKey(plainText, expandedKey);
+
+    for(int i=0;i<rounds-1;i++){
+       
+        substituteBytes( plainText);
+
+        shiftRows(plainText);
+        
+        mixColumns(plainText);
+        
+        addRoundKey(plainText, expandedKey+(i+1)*16);
+
+        
+    }
+        substituteBytes( plainText);
+
+        shiftRows(plainText);
+        
+        addRoundKey(plainText, expandedKey+(rounds)*16);
+
+    memcpy(cipherText, plainText, sizeof(char)*16);
+}
+
 
 void leftCircularShiftWord(unsigned char word[4]){
 
@@ -230,8 +260,6 @@ void matrixMultiply(unsigned char* matrixA, int matrixB[4][4]){
 }
 
 
-
-
 unsigned char fastMultiplyGF(unsigned char polynomial, int multiplier ){
     
     long long overflowed=polynomial;
@@ -331,10 +359,10 @@ void inverseShiftRows(unsigned char* cipherText){
 
 }
 
-void AESdecrypt(unsigned char* cipherText,unsigned char* resultText, unsigned char*  key, int rounds){
+void AESdecryptFaster(unsigned char* cipherText,unsigned char* resultText, unsigned char*  key, int rounds, unsigned char* expandedKey){
     int endofKey=176-16;
-    unsigned char expandedKey[176];
-    keyExpansion(key, expandedKey);
+    //unsigned char expandedKey[176];
+    //keyExpansion(key, expandedKey);
     addRoundKey(cipherText, expandedKey+endofKey);
 
     for(int i=0;i<rounds-1;i++){

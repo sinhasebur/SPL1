@@ -105,8 +105,8 @@ void printError(char * x){
     printf("Attacks: patternLeak kpta mitm"); endl;
     endl;
     printf("./cryptool inspect -show"); endl;
-    printf("Show: sbox firstblock"); endl;
-    
+    printf("Show: sbox, firstblock"); endl;
+    printf("./cryptool bench");
     exit(1);
 }
 
@@ -470,7 +470,7 @@ void checkValidity (struct values* command){
                 printError("Please have mode defined");
             }
 
-            if(command->mode!=ecb && command->iv==0){
+            if(command->mode!=ecb && command->ivState==0){
                 printf("Modes other than ECB require iv, using default");
             }
 
