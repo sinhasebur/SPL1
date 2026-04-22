@@ -37,6 +37,13 @@
 #define KPTA 2
 #define PatternLeak 1
 
+//tasks
+#define _enc 1 
+#define _dec 2
+#define _attack 5
+#define _bench 10
+#define _inspect 11
+
 struct values{
     int mode;
     int encryp;
@@ -44,6 +51,7 @@ struct values{
     int attackType;
 
     char* inputfilename, *outputfilename;
+    int inputFlag;
     int key[192];
     int keybits;
     int ivbits;
@@ -94,8 +102,10 @@ int main(int argc , char* argv[]){
 void printError(char * x){
     
     endl
-    printf("Incorrect Command : %s" , x); endl endl
-    // printf("Please Follow the following standard"); endl
+    printf("                    %s" , x); endl endl
+
+    printf("Please Follow the following standard"); endl
+    
     printf("./cryptool enc/dec/break -alg  -mode -in -out -key -iv"); endl;
     
     printf("Key- random, random20 "); endl
@@ -154,7 +164,8 @@ int writeCommand(int comm, struct values* command, char* x){
     }
     else if(comm==3){ //input
         command->inputfilename=x;
-        command->byteNumber=-1;    
+        command->byteNumber=-1;  
+        command->inputFlag=1;  
     }
     else if(comm==4){ // output
         command->outputfilename=x;
@@ -335,9 +346,10 @@ void setDefaultValues(struct values* command){
     command->task=-1;
     command->attackType=0;
 
-    char* in="input";
-    command->inputfilename=in;
-    
+    // char* in="input";
+    // command->inputfilename=in;
+    command->inputFlag=0;
+
     char* out="output";
     command->outputfilename=out;
 
@@ -363,12 +375,15 @@ void checkValidity (struct values* command){
         printError("Please have proper arguments");
     }
     
-    if((command->task==1 || command->task==2 )){
+    if((command->task==_enc || command->task==_dec )){
         
         if(command->encryp==-1  && (command->task==1 || command->task==2 )){
             printError("Please have encryption type");
         }
         
+        if(command->inputFlag==0){
+            printf("Please Select an input file ");
+        }
 
         if(command->keybits!=-1){
 
@@ -426,13 +441,17 @@ void checkValidity (struct values* command){
     }
     
     if(command->task==5){
+        if(command->inputFlag==0){
+            printf("Please have input filename");
+        }
+        
         if(command->attackType==PatternLeak){ 
             if(command->mode==-1){
                 command->mode=1;
             }
         }
 
-        if(command->attackType==MeetInTheMiddle){
+        else if(command->attackType==MeetInTheMiddle){
             if(command->encryp==-1){
                 command->encryp=_2DES;
             }
@@ -454,7 +473,7 @@ void checkValidity (struct values* command){
             
         }
 
-        if(command->attackType==KPTA){
+        else if(command->attackType==KPTA){
             if(command->encryp==-1){
                 command->encryp=DES;
             }
@@ -478,6 +497,9 @@ void checkValidity (struct values* command){
                 printError("Please provide known plaintext");
             }
             
+        }
+        else{
+            printError("Please Select Attack");
         }
     }
 
@@ -610,7 +632,7 @@ void printInfo(struct values* command, double time_taken){
         printf("Authentication Tag is : %s", hexTag);endl
     }
 
-    endl printf("                                     TIME AND SPEED"); endl
+    endl printf("                    TIME AND SPEED"); endl
     printf("Time taken is: %f sec.", time_taken); endl;
 
     if(command->byteNumber!=0){

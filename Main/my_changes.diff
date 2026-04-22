@@ -1,0 +1,470 @@
+diff --git a/Main/aes.c b/Main/aes.c
+index b3df6de..72f2b62 100644
+--- a/Main/aes.c
++++ b/Main/aes.c
+@@ -1,5 +1,6 @@
+ #include "aes.h"
+ #include <string.h>
++#include "sbox.h"
+ 
+ void AESencrypt(unsigned char* plainText, unsigned char* cipherText, unsigned char*  key, int rounds){
+ 
+@@ -34,27 +35,30 @@ void AESencryptFaster(unsigned char* plainText, unsigned char* cipherText, unsig
+ 
+     //unsigned char expandedKey[176];
+     //keyExpansion(key, expandedKey);
+-    addRoundKey(plainText, expandedKey);
++    unsigned char tempPT[16];
++    memcpy(tempPT, plainText, 16);
++
++    addRoundKey(tempPT, expandedKey);
+ 
+     for(int i=0;i<rounds-1;i++){
+        
+-        substituteBytes( plainText);
++        substituteBytes( tempPT);
+ 
+-        shiftRows(plainText);
++        shiftRows(tempPT);
+         
+-        mixColumns(plainText);
++        mixColumns(tempPT);
+         
+-        addRoundKey(plainText, expandedKey+(i+1)*16);
++        addRoundKey(tempPT, expandedKey+(i+1)*16);
+ 
+         
+     }
+-        substituteBytes( plainText);
++        substituteBytes( tempPT);
+ 
+-        shiftRows(plainText);
++        shiftRows(tempPT);
+         
+-        addRoundKey(plainText, expandedKey+(rounds)*16);
++        addRoundKey(tempPT, expandedKey+(rounds)*16);
+ 
+-    memcpy(cipherText, plainText, sizeof(char)*16);
++    memcpy(cipherText, tempPT, sizeof(char)*16);
+ }
+ 
+ 
+@@ -259,79 +263,98 @@ void matrixMultiply(unsigned char* matrixA, int matrixB[4][4]){
+     }
+ }
+ 
++// unsigned char multiplyGF(unsigned char polynomial, int multiplier ){
++//     long long overflowed=polynomial;
++//     // printf("polynomial %x", overflowed); endl
+ 
+-unsigned char fastMultiplyGF(unsigned char polynomial, int multiplier ){
+-    
+-    long long overflowed=polynomial;
+-    // printf("polynomial %x", overflowed); endl
+-
+-    if(multiplier==1){
+-        overflowed=overflowed;
+-    }
+-    else if(multiplier==2){
+-        overflowed<<=1;
+-    }
+-    else if(multiplier==3){
+-        long long temp=overflowed;
+-        overflowed<<=1;
+-        overflowed=overflowed^temp;
++//     if(multiplier==1){
++//         overflowed=overflowed;
++//     }
++//     else if(multiplier==2){
++//         overflowed<<=1;
++//     }
++//     else if(multiplier==3){
++//         long long temp=overflowed;
++//         overflowed<<=1;
++//         overflowed=overflowed^temp;
+     
+-    }
+-    else if(multiplier==9){ //1001
+-        long long temp=overflowed;
+-        overflowed<<=3;
+-        overflowed=overflowed^temp;
+-    }
+-    else if(multiplier==11){ //1011
+-        long long temp=overflowed;
+-        overflowed<<=3;
+-        long long temp2=temp;
+-        temp2<<=1;
+-        overflowed=overflowed^temp2;
+-        overflowed=overflowed^temp;
+-    } 
+-    else if(multiplier==13){ //1101
+-        long long temp=overflowed;
+-        overflowed<<=3;
+-        long long temp2=temp;
+-        temp2<<=2;
+-        overflowed=overflowed^temp2;
+-        overflowed=overflowed^temp;
+-    }
+-    else if(multiplier==14){ //1110
+-        long long temp=overflowed;
+-        overflowed<<=3;
+-        long long temp2=temp;
+-        temp2<<=2;
+-        overflowed=overflowed^temp2;
+-        temp<<=1;
+-        overflowed=overflowed^temp;
+-    }
++//     }
++//     else if(multiplier==9){ //1001
++//         long long temp=overflowed;
++//         overflowed<<=3;
++//         overflowed=overflowed^temp;
++//     }
++//     else if(multiplier==11){ //1011
++//         long long temp=overflowed;
++//         overflowed<<=3;
++//         long long temp2=temp;
++//         temp2<<=1;
++//         overflowed=overflowed^temp2;
++//         overflowed=overflowed^temp;
++//     } 
++//     else if(multiplier==13){ //1101
++//         long long temp=overflowed;
++//         overflowed<<=3;
++//         long long temp2=temp;
++//         temp2<<=2;
++//         overflowed=overflowed^temp2;
++//         overflowed=overflowed^temp;
++//     }
++//     else if(multiplier==14){ //1110
++//         long long temp=overflowed;
++//         overflowed<<=3;
++//         long long temp2=temp;
++//         temp2<<=2;
++//         overflowed=overflowed^temp2;
++//         temp<<=1;
++//         overflowed=overflowed^temp;
++//     }
+         
+-    // printf("overflowed is %x", overflowed); endl
++//     // printf("overflowed is %x", overflowed); endl
+ 
+-    //divide by x^8 + x^4 + x^3 + x + 1
+-    long long irreduciblePolynomial = (1LL<<8) + (1LL<<4) + (1LL<<3) + (1LL<<1) + 1;
+-    long long limit = (1LL << 8);
+-    // printf("irreducible Polynomial is %x", irreduciblePolynomial); endl
++//     //divide by x^8 + x^4 + x^3 + x + 1
++//     long long irreduciblePolynomial = (1LL<<8) + (1LL<<4) + (1LL<<3) + (1LL<<1) + 1;
++//     long long limit = (1LL << 8);
++//     // printf("irreducible Polynomial is %x", irreduciblePolynomial); endl
+ 
+-    while(overflowed>=limit){
+-        int leadingbit=-1;
+-        long long checkLeading=overflowed;
+-        long long divisor=irreduciblePolynomial;
++//     while(overflowed>=limit){
++//         int leadingbit=-1;
++//         long long checkLeading=overflowed;
++//         long long divisor=irreduciblePolynomial;
+         
+-        while(checkLeading>0){leadingbit++; checkLeading>>=1;}
++//         while(checkLeading>0){leadingbit++; checkLeading>>=1;}
+ 
+-        int shifting=leadingbit-8;
+-        divisor<<=shifting;
+-        // printf("new divisor is %x" , divisor); endl
++//         int shifting=leadingbit-8;
++//         divisor<<=shifting;
++//         // printf("new divisor is %x" , divisor); endl
+         
+-        overflowed ^=divisor;
+-        // printf("%d\n",overflowed); endl
+-    }
++//         overflowed ^=divisor;
++//         // printf("%d\n",overflowed); endl
++//     }
++
++//     return overflowed;
++// }
++
++unsigned char xtime(unsigned char b){
++    int b7 = (1<<7); //1000000
++    int m = (1<<4)|(1<<3)|(1<<1)|1; // 0 0 0 1 1 0 1 1
++    if(b & b7)
++        return (b << 1) ^ m;
++    else
++        return (b << 1);
++}
+ 
+-    return overflowed;
++unsigned char fastMultiplyGF(unsigned char polynomial, int multiplier ){
+ 
++    if(multiplier==1) return polynomial;
++    else if(multiplier==2) return xtime(polynomial); // definintion
++    else if(multiplier==3) return xtime(polynomial)^polynomial; //2+1 
++    else if(multiplier==4) return xtime(xtime(polynomial)); //2x2
++    else if(multiplier==9)  return xtime(xtime(xtime(polynomial)))^polynomial; //8+1
++    else if(multiplier==11) return xtime(xtime(xtime(polynomial)))^xtime(polynomial)^polynomial; //8+2+1
++    else if(multiplier==13) return xtime(xtime(xtime(polynomial)))^xtime(xtime(polynomial))^polynomial; //8+4+1
++    else if(multiplier==14) return xtime(xtime(xtime(polynomial)))^xtime(xtime(polynomial))^xtime(polynomial); //8+4+2
++    else return polynomial;
+ } 
+ 
+ 
+@@ -363,20 +386,24 @@ void AESdecryptFaster(unsigned char* cipherText,unsigned char* resultText, unsig
+     int endofKey=176-16;
+     //unsigned char expandedKey[176];
+     //keyExpansion(key, expandedKey);
+-    addRoundKey(cipherText, expandedKey+endofKey);
++    unsigned char tempCT[16];
++    memcpy(tempCT, cipherText, 16);
++
++
++    addRoundKey(tempCT, expandedKey+endofKey);
+ 
+     for(int i=0;i<rounds-1;i++){
+         
+-        inverseShiftRows(cipherText);
+-        inverseSubstituteBytes( cipherText);
+-        addRoundKey(cipherText, expandedKey + endofKey-(i+1)*16);
+-        inverseMixColumns(cipherText);
++        inverseShiftRows(tempCT);
++        inverseSubstituteBytes( tempCT);
++        addRoundKey(tempCT, expandedKey + endofKey-(i+1)*16);
++        inverseMixColumns(tempCT);
+         
+     }
+-        inverseShiftRows(cipherText);
+-        inverseSubstituteBytes( cipherText);        
++        inverseShiftRows(tempCT);
++        inverseSubstituteBytes(tempCT);        
+         
+-        addRoundKey(cipherText, expandedKey);
++        addRoundKey(tempCT, expandedKey);
+ 
+-        memcpy(resultText, cipherText, sizeof(char)*16);
++        memcpy(resultText, tempCT, sizeof(char)*16);
+ }
+diff --git a/Main/cryptool b/Main/cryptool
+index bbc2673..9c97320 100755
+Binary files a/Main/cryptool and b/Main/cryptool differ
+diff --git a/Main/driver2.c b/Main/driver2.c
+index 7e51050..5ef7616 100644
+--- a/Main/driver2.c
++++ b/Main/driver2.c
+@@ -37,6 +37,13 @@
+ #define KPTA 2
+ #define PatternLeak 1
+ 
++//tasks
++#define _enc 1 
++#define _dec 2
++#define _attack 5
++#define _bench 10
++#define _inspect 11
++
+ struct values{
+     int mode;
+     int encryp;
+@@ -44,6 +51,7 @@ struct values{
+     int attackType;
+ 
+     char* inputfilename, *outputfilename;
++    int inputFlag;
+     int key[192];
+     int keybits;
+     int ivbits;
+@@ -94,8 +102,10 @@ int main(int argc , char* argv[]){
+ void printError(char * x){
+     
+     endl
+-    printf("Incorrect Command : %s" , x); endl endl
+-    // printf("Please Follow the following standard"); endl
++    printf("                    %s" , x); endl endl
++
++    printf("Please Follow the following standard"); endl
++    
+     printf("./cryptool enc/dec/break -alg  -mode -in -out -key -iv"); endl;
+     
+     printf("Key- random, random20 "); endl
+@@ -154,7 +164,8 @@ int writeCommand(int comm, struct values* command, char* x){
+     }
+     else if(comm==3){ //input
+         command->inputfilename=x;
+-        command->byteNumber=-1;    
++        command->byteNumber=-1;  
++        command->inputFlag=1;  
+     }
+     else if(comm==4){ // output
+         command->outputfilename=x;
+@@ -335,9 +346,10 @@ void setDefaultValues(struct values* command){
+     command->task=-1;
+     command->attackType=0;
+ 
+-    char* in="input";
+-    command->inputfilename=in;
+-    
++    // char* in="input";
++    // command->inputfilename=in;
++    command->inputFlag=0;
++
+     char* out="output";
+     command->outputfilename=out;
+ 
+@@ -363,12 +375,15 @@ void checkValidity (struct values* command){
+         printError("Please have proper arguments");
+     }
+     
+-    if((command->task==1 || command->task==2 )){
++    if((command->task==_enc || command->task==_dec )){
+         
+         if(command->encryp==-1  && (command->task==1 || command->task==2 )){
+             printError("Please have encryption type");
+         }
+         
++        if(command->inputFlag==0){
++            printf("Please Select an input file ");
++        }
+ 
+         if(command->keybits!=-1){
+ 
+@@ -426,13 +441,17 @@ void checkValidity (struct values* command){
+     }
+     
+     if(command->task==5){
++        if(command->inputFlag==0){
++            printf("Please have input filename");
++        }
++        
+         if(command->attackType==PatternLeak){ 
+             if(command->mode==-1){
+                 command->mode=1;
+             }
+         }
+ 
+-        if(command->attackType==MeetInTheMiddle){
++        else if(command->attackType==MeetInTheMiddle){
+             if(command->encryp==-1){
+                 command->encryp=_2DES;
+             }
+@@ -454,7 +473,7 @@ void checkValidity (struct values* command){
+             
+         }
+ 
+-        if(command->attackType==KPTA){
++        else if(command->attackType==KPTA){
+             if(command->encryp==-1){
+                 command->encryp=DES;
+             }
+@@ -479,6 +498,9 @@ void checkValidity (struct values* command){
+             }
+             
+         }
++        else{
++            printError("Please Select Attack");
++        }
+     }
+ 
+ 
+@@ -610,7 +632,7 @@ void printInfo(struct values* command, double time_taken){
+         printf("Authentication Tag is : %s", hexTag);endl
+     }
+ 
+-    endl printf("                                     TIME AND SPEED"); endl
++    endl printf("                    TIME AND SPEED"); endl
+     printf("Time taken is: %f sec.", time_taken); endl;
+ 
+     if(command->byteNumber!=0){
+diff --git a/Main/work/cryptool b/Main/work/cryptool
+index bbc2673..9c97320 100755
+Binary files a/Main/work/cryptool and b/Main/work/cryptool differ
+diff --git a/Main/work/results.csv b/Main/work/results.csv
+index 163896d..1baf805 100644
+--- a/Main/work/results.csv
++++ b/Main/work/results.csv
+@@ -1,43 +1,43 @@
+ Algo,Mode,Operation,Time(Sec),Throughput(MB/sec)
+-DES,ECB,Encrypt,0.222084,3.683552
+-DES,ECB,Decrypt,0.230220,3.553375
+-2DES,ECB,Encrypt,0.460983,1.774595
+-2DES,ECB,Decrypt,0.463086,1.766536
+-3DES,ECB,Encrypt,0.668643,1.223460
+-3DES,ECB,Decrypt,0.748425,1.093039
+-AES,ECB,Encrypt,0.302082,2.708066
+-AES,ECB,Decrypt,0.652843,1.253070
+-DES,CBC,Encrypt,0.199939,4.091538
+-DES,CBC,Decrypt,0.221722,3.689566
+-2DES,CBC,Encrypt,0.433824,1.885691
+-2DES,CBC,Decrypt,0.426981,1.915912
+-3DES,CBC,Encrypt,0.637463,1.283303
+-3DES,CBC,Decrypt,0.693485,1.179633
+-AES,CBC,Encrypt,0.301077,2.717106
+-AES,CBC,Decrypt,0.663706,1.232561
+-DES,CFB,Encrypt,1.721123,0.475305
+-DES,CFB,Decrypt,1.719694,0.475700
+-2DES,CFB,Encrypt,3.656911,0.223702
+-2DES,CFB,Decrypt,3.689771,0.221710
+-3DES,CFB,Encrypt,5.470759,0.149533
+-3DES,CFB,Decrypt,5.500253,0.148731
+-AES,CFB,Encrypt,4.723374,0.173194
+-AES,CFB,Decrypt,4.663799,0.175406
+-DES,OFB,Encrypt,0.224987,3.636023
+-DES,OFB,Decrypt,0.210030,3.894958
+-2DES,OFB,Encrypt,0.471658,1.734430
+-2DES,OFB,Decrypt,0.439511,1.861291
+-3DES,OFB,Encrypt,0.707543,1.156195
+-3DES,OFB,Decrypt,0.642957,1.272337
+-AES,OFB,Encrypt,0.299722,2.729389
+-AES,OFB,Decrypt,0.286405,2.856298
+-DES,Counter,Encrypt,0.207095,3.950158
+-DES,Counter,Decrypt,0.209137,3.911589
+-2DES,Counter,Encrypt,0.440612,1.856640
+-2DES,Counter,Decrypt,0.435972,1.876400
+-3DES,Counter,Encrypt,0.642219,1.273799
+-3DES,Counter,Decrypt,0.645264,1.267788
+-AES,Counter,Encrypt,0.277289,2.950200
+-AES,Counter,Decrypt,0.277289,2.950200
+-AES,GCM,Encrypt,0.347515,2.354022
+-AES,GCM,Decrypt,0.339966,2.406294
++DES,ECB,Encrypt,0.206402,3.963421
++DES,ECB,Decrypt,0.211355,3.870540
++2DES,ECB,Encrypt,0.384804,2.125908
++2DES,ECB,Decrypt,0.368618,2.219257
++3DES,ECB,Encrypt,0.547171,1.495068
++3DES,ECB,Decrypt,0.566875,1.443101
++AES,ECB,Encrypt,0.182116,4.491961
++AES,ECB,Decrypt,0.205514,3.980546
++DES,CBC,Encrypt,0.186785,4.379677
++DES,CBC,Decrypt,0.197258,4.147147
++2DES,CBC,Encrypt,0.366576,2.231619
++2DES,CBC,Decrypt,0.372348,2.197025
++3DES,CBC,Encrypt,0.549154,1.489670
++3DES,CBC,Decrypt,0.567360,1.441868
++AES,CBC,Encrypt,0.183737,4.452331
++AES,CBC,Decrypt,0.210538,3.885560
++DES,CFB,Encrypt,1.521199,0.537772
++DES,CFB,Decrypt,1.515559,0.539773
++2DES,CFB,Encrypt,3.003722,0.272348
++2DES,CFB,Decrypt,3.005494,0.272188
++3DES,CFB,Encrypt,4.461101,0.183376
++3DES,CFB,Decrypt,4.510294,0.181376
++AES,CFB,Encrypt,3.126474,0.261655
++AES,CFB,Decrypt,3.118294,0.262342
++DES,OFB,Encrypt,0.193570,4.226161
++DES,OFB,Decrypt,0.188877,4.331168
++2DES,OFB,Encrypt,0.377637,2.166255
++2DES,OFB,Decrypt,0.367454,2.226287
++3DES,OFB,Encrypt,0.562477,1.454385
++3DES,OFB,Decrypt,0.547054,1.495388
++AES,OFB,Encrypt,0.199968,4.090945
++AES,OFB,Decrypt,0.182890,4.472951
++DES,Counter,Encrypt,0.188243,4.345755
++DES,Counter,Decrypt,0.188393,4.342295
++2DES,Counter,Encrypt,0.366330,2.233118
++2DES,Counter,Decrypt,0.372362,2.196943
++3DES,Counter,Encrypt,0.548322,1.491930
++3DES,Counter,Decrypt,0.546098,1.498006
++AES,Counter,Encrypt,0.187618,4.360232
++AES,Counter,Decrypt,0.183580,4.456139
++AES,GCM,Encrypt,0.243787,3.355626
++AES,GCM,Decrypt,0.231102,3.539814

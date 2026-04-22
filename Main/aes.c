@@ -1,5 +1,6 @@
 #include "aes.h"
 #include <string.h>
+#include "sbox.h"
 
 void AESencrypt(unsigned char* plainText, unsigned char* cipherText, unsigned char*  key, int rounds){
 
@@ -34,27 +35,30 @@ void AESencryptFaster(unsigned char* plainText, unsigned char* cipherText, unsig
 
     //unsigned char expandedKey[176];
     //keyExpansion(key, expandedKey);
-    addRoundKey(plainText, expandedKey);
+    unsigned char tempPT[16];
+    memcpy(tempPT, plainText, 16);
+
+    addRoundKey(tempPT, expandedKey);
 
     for(int i=0;i<rounds-1;i++){
        
-        substituteBytes( plainText);
+        substituteBytes( tempPT);
 
-        shiftRows(plainText);
+        shiftRows(tempPT);
         
-        mixColumns(plainText);
+        mixColumns(tempPT);
         
-        addRoundKey(plainText, expandedKey+(i+1)*16);
+        addRoundKey(tempPT, expandedKey+(i+1)*16);
 
         
     }
-        substituteBytes( plainText);
+        substituteBytes( tempPT);
 
-        shiftRows(plainText);
+        shiftRows(tempPT);
         
-        addRoundKey(plainText, expandedKey+(rounds)*16);
+        addRoundKey(tempPT, expandedKey+(rounds)*16);
 
-    memcpy(cipherText, plainText, sizeof(char)*16);
+    memcpy(cipherText, tempPT, sizeof(char)*16);
 }
 
 
@@ -259,79 +263,98 @@ void matrixMultiply(unsigned char* matrixA, int matrixB[4][4]){
     }
 }
 
+// unsigned char multiplyGF(unsigned char polynomial, int multiplier ){
+//     long long overflowed=polynomial;
+//     // printf("polynomial %x", overflowed); endl
+
+//     if(multiplier==1){
+//         overflowed=overflowed;
+//     }
+//     else if(multiplier==2){
+//         overflowed<<=1;
+//     }
+//     else if(multiplier==3){
+//         long long temp=overflowed;
+//         overflowed<<=1;
+//         overflowed=overflowed^temp;
+    
+//     }
+//     else if(multiplier==9){ //1001
+//         long long temp=overflowed;
+//         overflowed<<=3;
+//         overflowed=overflowed^temp;
+//     }
+//     else if(multiplier==11){ //1011
+//         long long temp=overflowed;
+//         overflowed<<=3;
+//         long long temp2=temp;
+//         temp2<<=1;
+//         overflowed=overflowed^temp2;
+//         overflowed=overflowed^temp;
+//     } 
+//     else if(multiplier==13){ //1101
+//         long long temp=overflowed;
+//         overflowed<<=3;
+//         long long temp2=temp;
+//         temp2<<=2;
+//         overflowed=overflowed^temp2;
+//         overflowed=overflowed^temp;
+//     }
+//     else if(multiplier==14){ //1110
+//         long long temp=overflowed;
+//         overflowed<<=3;
+//         long long temp2=temp;
+//         temp2<<=2;
+//         overflowed=overflowed^temp2;
+//         temp<<=1;
+//         overflowed=overflowed^temp;
+//     }
+        
+//     // printf("overflowed is %x", overflowed); endl
+
+//     //divide by x^8 + x^4 + x^3 + x + 1
+//     long long irreduciblePolynomial = (1LL<<8) + (1LL<<4) + (1LL<<3) + (1LL<<1) + 1;
+//     long long limit = (1LL << 8);
+//     // printf("irreducible Polynomial is %x", irreduciblePolynomial); endl
+
+//     while(overflowed>=limit){
+//         int leadingbit=-1;
+//         long long checkLeading=overflowed;
+//         long long divisor=irreduciblePolynomial;
+        
+//         while(checkLeading>0){leadingbit++; checkLeading>>=1;}
+
+//         int shifting=leadingbit-8;
+//         divisor<<=shifting;
+//         // printf("new divisor is %x" , divisor); endl
+        
+//         overflowed ^=divisor;
+//         // printf("%d\n",overflowed); endl
+//     }
+
+//     return overflowed;
+// }
+
+unsigned char xtime(unsigned char b){
+    int b7 = (1<<7); //1000000
+    int m = (1<<4)|(1<<3)|(1<<1)|1; // 0 0 0 1 1 0 1 1
+    if(b & b7)
+        return (b << 1) ^ m;
+    else
+        return (b << 1);
+}
 
 unsigned char fastMultiplyGF(unsigned char polynomial, int multiplier ){
-    
-    long long overflowed=polynomial;
-    // printf("polynomial %x", overflowed); endl
 
-    if(multiplier==1){
-        overflowed=overflowed;
-    }
-    else if(multiplier==2){
-        overflowed<<=1;
-    }
-    else if(multiplier==3){
-        long long temp=overflowed;
-        overflowed<<=1;
-        overflowed=overflowed^temp;
-    
-    }
-    else if(multiplier==9){ //1001
-        long long temp=overflowed;
-        overflowed<<=3;
-        overflowed=overflowed^temp;
-    }
-    else if(multiplier==11){ //1011
-        long long temp=overflowed;
-        overflowed<<=3;
-        long long temp2=temp;
-        temp2<<=1;
-        overflowed=overflowed^temp2;
-        overflowed=overflowed^temp;
-    } 
-    else if(multiplier==13){ //1101
-        long long temp=overflowed;
-        overflowed<<=3;
-        long long temp2=temp;
-        temp2<<=2;
-        overflowed=overflowed^temp2;
-        overflowed=overflowed^temp;
-    }
-    else if(multiplier==14){ //1110
-        long long temp=overflowed;
-        overflowed<<=3;
-        long long temp2=temp;
-        temp2<<=2;
-        overflowed=overflowed^temp2;
-        temp<<=1;
-        overflowed=overflowed^temp;
-    }
-        
-    // printf("overflowed is %x", overflowed); endl
-
-    //divide by x^8 + x^4 + x^3 + x + 1
-    long long irreduciblePolynomial = (1LL<<8) + (1LL<<4) + (1LL<<3) + (1LL<<1) + 1;
-    long long limit = (1LL << 8);
-    // printf("irreducible Polynomial is %x", irreduciblePolynomial); endl
-
-    while(overflowed>=limit){
-        int leadingbit=-1;
-        long long checkLeading=overflowed;
-        long long divisor=irreduciblePolynomial;
-        
-        while(checkLeading>0){leadingbit++; checkLeading>>=1;}
-
-        int shifting=leadingbit-8;
-        divisor<<=shifting;
-        // printf("new divisor is %x" , divisor); endl
-        
-        overflowed ^=divisor;
-        // printf("%d\n",overflowed); endl
-    }
-
-    return overflowed;
-
+    if(multiplier==1) return polynomial;
+    else if(multiplier==2) return xtime(polynomial); // definintion
+    else if(multiplier==3) return xtime(polynomial)^polynomial; //2+1 
+    else if(multiplier==4) return xtime(xtime(polynomial)); //2x2
+    else if(multiplier==9)  return xtime(xtime(xtime(polynomial)))^polynomial; //8+1
+    else if(multiplier==11) return xtime(xtime(xtime(polynomial)))^xtime(polynomial)^polynomial; //8+2+1
+    else if(multiplier==13) return xtime(xtime(xtime(polynomial)))^xtime(xtime(polynomial))^polynomial; //8+4+1
+    else if(multiplier==14) return xtime(xtime(xtime(polynomial)))^xtime(xtime(polynomial))^xtime(polynomial); //8+4+2
+    else return polynomial;
 } 
 
 
@@ -363,20 +386,24 @@ void AESdecryptFaster(unsigned char* cipherText,unsigned char* resultText, unsig
     int endofKey=176-16;
     //unsigned char expandedKey[176];
     //keyExpansion(key, expandedKey);
-    addRoundKey(cipherText, expandedKey+endofKey);
+    unsigned char tempCT[16];
+    memcpy(tempCT, cipherText, 16);
+
+
+    addRoundKey(tempCT, expandedKey+endofKey);
 
     for(int i=0;i<rounds-1;i++){
         
-        inverseShiftRows(cipherText);
-        inverseSubstituteBytes( cipherText);
-        addRoundKey(cipherText, expandedKey + endofKey-(i+1)*16);
-        inverseMixColumns(cipherText);
+        inverseShiftRows(tempCT);
+        inverseSubstituteBytes( tempCT);
+        addRoundKey(tempCT, expandedKey + endofKey-(i+1)*16);
+        inverseMixColumns(tempCT);
         
     }
-        inverseShiftRows(cipherText);
-        inverseSubstituteBytes( cipherText);        
+        inverseShiftRows(tempCT);
+        inverseSubstituteBytes(tempCT);        
         
-        addRoundKey(cipherText, expandedKey);
+        addRoundKey(tempCT, expandedKey);
 
-        memcpy(resultText, cipherText, sizeof(char)*16);
+        memcpy(resultText, tempCT, sizeof(char)*16);
 }
