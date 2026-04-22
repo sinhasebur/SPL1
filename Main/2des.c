@@ -1,7 +1,6 @@
 #include "2des.h"
 #include "des.h"
 
-
 void _2DES_Encrypt(unsigned char* text, int* key1, int* key2, unsigned char* cipherText)
 {
     static int keysM1[16][48];

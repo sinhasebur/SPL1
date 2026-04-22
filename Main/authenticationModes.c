@@ -11,7 +11,6 @@ __uint128_t M[128]={0};
 
 
 
-
 // Algorithm 1 Multiplication in ). Computes the value of Z = X · Y , where X, Y and
 // Z ∈ GF(2^128).
 // Z ← 0, V ← X
@@ -82,7 +81,6 @@ void gcm_encryptText(int* intKey, unsigned char* plaintext, int length, unsigned
     //     printf("%02x ", h[i]); 
     // }
      
-    
     //  Y0 = IV 0^31 1 if len(IV ) = 96,  Y0 = GHASH(H, {}, IV ) otherwise.
 
     unsigned char y0[16]={0};

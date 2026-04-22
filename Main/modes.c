@@ -38,32 +38,23 @@ int pkcs7_Pad(int blockSize,FILE* text , unsigned char** textstream)
 }
 
 
+
+
 void pkcs7_remove_Pad(int blockSize,FILE* decrypted,unsigned char** outstream , int size)
 {
-    int padNumber= (*outstream)[size];
+    int padded= (*outstream)[size];
 
     int bytes=blockSize/8;
 
-    if (padNumber <= 0 || padNumber >bytes ) {
-        padNumber= 0;
-        printf("Padding error\n");endl
-        return;
-    }
-    else{
-        for(int i=size,j=0;j<padNumber;i--,j++){
-            if((*outstream)[i]!=padNumber){
-                printf("Pad not aligned");endl
-                return;
-            }
-        }
+    if (padded <= 0 || padded >bytes ) {
+        padded= 0;
+        printf("Padding error\n");
     }
 
-    // for(int i=0; i<size-padded; i++){
-    //     fputc((*outstream)[i],decrypted);
-    // }
-    fwrite(*outstream, sizeof(char),size-padNumber, decrypted);
+    for(int i=0; i<size-padded; i++){
+        fputc((*outstream)[i],decrypted);
+    }
 }
-
 
 
 
@@ -94,10 +85,10 @@ void ecb_encrypt(int blockSize,  int* key, char* infilename, char* outfilename, 
 
     FILE *cipher  = fopen(outfilename, "wb");
 
-    // for(int i=0; i<allocate ; i++){
-    //     fputc(cipherTextStream[i],cipher);
-    // }
-    fwrite(cipherTextStream, sizeof(char),allocate, cipher);
+    for(int i=0; i<allocate ; i++){
+        fputc(cipherTextStream[i],cipher);
+    }
+    //fwrite(cipherTextStream, sizeof(char),allocate, cipher);
 
     fclose(text);
     fclose(cipher);

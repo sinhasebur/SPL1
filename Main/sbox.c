@@ -59,13 +59,13 @@ int getInverseGF(unsigned char byte){
 unsigned char multiplyGF(unsigned char a, unsigned char b){
     
     unsigned char ans=0;
+    long long irreduciblePolynomial= (1<<8)+(1<<4)+(1<<3)+(1<<1)+1; //x^8 + x^4 + x^3 + x + 1
     for (int i=0;i<8;i++) {
         
         if(b & 1) ans ^= a;  
         long long limit= (1<<7);
         bool overflows=a&limit;
         a <<= 1;
-        long long irreduciblePolynomial= (1<<8)+(1<<4)+(1<<3)+(1<<1)+1; //x^8 + x^4 + x^3 + x + 1
         if (overflows) a= a^irreduciblePolynomial; 
         b >>= 1; 
     }

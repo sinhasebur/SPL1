@@ -246,7 +246,7 @@ void matrixMultiply(unsigned char* matrixA, int matrixB[4][4]){
         for(int j=0;j<4;j++){
             for(int k=0;k<4;k++){
                 // printf("Trying to multiply %c and %d ", matrixA2[i][j], matrixB[k][j]);
-                ans[i][j] ^= fastMultiplyGF(matrixA2[k][j],matrixB[i][k]) ;  // change to multiplication in GF(2^8)
+                ans[i][j] ^= fastMultiplyGF(matrixA2[k][j],matrixB[i][k]) ;  // multiplication in GF(2^8)
             }
             
         }
@@ -374,8 +374,7 @@ void AESdecryptFaster(unsigned char* cipherText,unsigned char* resultText, unsig
         
     }
         inverseShiftRows(cipherText);
-        inverseSubstituteBytes( cipherText);
-        
+        inverseSubstituteBytes( cipherText);        
         
         addRoundKey(cipherText, expandedKey);
 

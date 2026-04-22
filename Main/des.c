@@ -396,7 +396,7 @@ void permutedChoice1(int *x, int *y)
     };
 
     for (int i = 0; i < 56; i++) {
-        y[i] = x[p1[i - 1]];
+        y[i] = x[p1[i ] -1 ];
     }
 }
 
@@ -414,7 +414,7 @@ void permutedChoice2(int *x, int *y)
     };
 
     for (int i = 0; i < 48; i++){
-        y[i] = x[p2[i - 1]];
+        y[i] = x[p2[i ] -1];
     }
 }
 
